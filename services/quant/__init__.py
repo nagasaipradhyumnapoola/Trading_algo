@@ -7,6 +7,7 @@ from an LLM.
 
 from .event_study import AggregateStudy, EventStudy, EventStudyResult
 from .features import FEATURE_SET_VERSION, FeatureSnapshot, Quality, compute_features
+from .model_registry import Approval, ModelCard, ModelRegistry, beats_baseline
 from .scanner import ScanCandidate, ScanConfig, scan
 
 __all__ = [
@@ -20,4 +21,8 @@ __all__ = [
     "EventStudy",
     "EventStudyResult",
     "AggregateStudy",
+    "Approval",
+    "ModelCard",
+    "ModelRegistry",
+    "beats_baseline",
 ]

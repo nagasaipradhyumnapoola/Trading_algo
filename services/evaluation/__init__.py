@@ -15,6 +15,7 @@ from .backtest import (
     simulate,
 )
 from .costs import CostModel
+from .cv import purged_walk_forward
 from .labels import LABEL_VERSION, Label, LabelConfig, label_dataset, label_signal
 from .paper_ledger import Action, PaperLedger, PaperSignal
 from .registry import (
@@ -49,4 +50,5 @@ __all__ = [
     "LABEL_VERSION",
     "label_signal",
     "label_dataset",
+    "purged_walk_forward",
 ]
