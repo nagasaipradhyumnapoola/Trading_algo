@@ -1,0 +1,9 @@
+# Normalize line endings: LF in the repo, auto on checkout.
+* text=auto eol=lf
+
+# Binary / data types Git should not touch.
+*.parquet binary
+*.duckdb binary
+*.png binary
+*.jpg binary
+*.ico binary
