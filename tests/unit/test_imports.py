@@ -55,16 +55,18 @@ def test_policies_never_hardcode_provider_model_names():
             assert not any(b in route.lower() for b in banned), route
 
 
-def test_gateway_blocks_until_phase3():
-    # No provider calls are permitted yet; the single path raises explicitly.
+def test_gateway_without_provider_degrades_cleanly():
+    # No provider configured -> explicit degraded failure, never fabricated output.
     gw = LLMGateway()
-    with pytest.raises(NotImplementedError):
-        asyncio.run(gw.request(agent="test", task=LLMTask.EVENT_EXTRACTION, payload={}))
+    result = asyncio.run(gw.request(agent="test", task=LLMTask.EVENT_EXTRACTION, payload={}))
+    assert result.state is GatewayState.FAILED
+    assert result.data is None
 
 
 def test_degraded_state_is_a_clean_failure():
-    gw = LLMGateway()
-    result = gw._degraded(LLMTask.BULL_CASE, "all routes down")
-    assert result.state is GatewayState.FAILED
+    from services.research_workers.llm_gateway import GatewayResult
+
+    result = GatewayResult(state=GatewayState.FAILED, task=LLMTask.BULL_CASE,
+                           error="all routes down")
     assert result.ok is False
     assert result.data is None

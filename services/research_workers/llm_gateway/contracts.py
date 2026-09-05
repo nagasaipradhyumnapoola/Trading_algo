@@ -6,11 +6,15 @@ validation, and provider calls are implemented in Phase 3.
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Any
 
 from pydantic import BaseModel, Field
+
+
+def _utcnow() -> datetime:
+    return datetime.now(timezone.utc)
 
 
 class LLMTask(str, Enum):
@@ -91,7 +95,7 @@ class LLMRunRecord(BaseModel):
     tokens: int | None = None
     cost: float | None = None
     state: GatewayState = GatewayState.FAILED
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=_utcnow)
 
 
 class GatewayResult(BaseModel):
