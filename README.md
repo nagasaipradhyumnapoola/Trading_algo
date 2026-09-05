@@ -139,6 +139,7 @@ Every recommendation ships with allocation, quantity, entry range, target, inval
 - [ ] **Phase 4** — Hardening: observability · retry/fallback · rate limits · drift detection
 
 📄 **Full engineering spec:** [`docs/INDIAN_EQUITY_AI_MASTER_SPEC.md`](docs/INDIAN_EQUITY_AI_MASTER_SPEC.md)
+🎯 **Performance, P&L & success requirements:** [`CLAUDE.md`](CLAUDE.md) — the honesty-first directive that governs the whole build
 
 ---
 
