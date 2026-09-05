@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Indian Alpha — Terminal</title>
+<style>
+  :root{
+    --bg:#0a0a0a; --panel:#101012; --panel-2:#16161a; --border:#24242a;
+    --border-soft:#1b1b20; --text:#f4f4f5; --text-muted:#a1a1aa; --text-dim:#6b6b74;
+    --up:#16c784; --down:#ea3943; --flat:#a1a1aa; --warn:#d4d4d8;
+    --font-mono:"JetBrains Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+    --font-sans:"Inter",ui-sans-serif,system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font-sans);font-size:12px}
+  .num{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+  header{display:flex;align-items:center;gap:16px;padding:10px 14px;
+    border-bottom:1px solid var(--border);background:var(--panel)}
+  header .brand{font-weight:700;letter-spacing:.5px}
+  header .brand b{color:var(--up)}
+  .tag{font-family:var(--font-mono);font-size:10px;padding:2px 6px;border:1px solid var(--border);
+    color:var(--text-dim);border-radius:2px}
+  .tag.sample{color:var(--warn)}
+  .spacer{flex:1}
+  main{padding:14px}
+  .controls{display:flex;gap:10px;align-items:center;margin-bottom:12px}
+  .controls label{color:var(--text-muted)}
+  input{background:var(--panel-2);border:1px solid var(--border);color:var(--text);
+    font-family:var(--font-mono);padding:4px 6px;border-radius:2px;width:90px}
+  button{background:transparent;border:1px solid var(--border);color:var(--text);
+    padding:4px 10px;border-radius:2px;cursor:pointer;font-family:var(--font-mono)}
+  button:hover{background:var(--panel-2)}
+  .banner{padding:10px 12px;border:1px solid var(--border);background:var(--panel);
+    border-radius:2px;margin-bottom:12px;font-family:var(--font-mono)}
+  .banner.notrade{color:var(--flat)}
+  table{width:100%;border-collapse:collapse;background:var(--panel)}
+  th,td{padding:7px 9px;border-bottom:1px solid var(--border-soft);text-align:right;white-space:nowrap}
+  th{color:var(--text-dim);font-weight:600;text-transform:uppercase;font-size:10px;letter-spacing:.4px;
+    text-align:right;position:sticky;top:0;background:var(--panel)}
+  th:first-child,td:first-child,th:nth-child(2),td:nth-child(2),td.reason,th.reason{text-align:left}
+  tbody tr:hover{background:var(--panel-2)}
+  .badge{font-family:var(--font-mono);font-size:10px;padding:1px 6px;border-radius:2px;border:1px solid}
+  .badge.buy{color:var(--up);border-color:var(--up)}
+  .badge.sell{color:var(--down);border-color:var(--down)}
+  .up{color:var(--up)} .down{color:var(--down)} .dim{color:var(--text-dim)}
+  td.reason{color:var(--text-muted);font-family:var(--font-mono);font-size:11px}
+  footer{padding:12px 14px;color:var(--text-dim);border-top:1px solid var(--border);margin-top:14px}
+  .err{color:var(--down);font-family:var(--font-mono)}
+</style>
+</head>
+<body>
+<header>
+  <span class="brand">INDIAN <b>ALPHA</b></span>
+  <span class="tag sample">SAMPLE DATA</span>
+  <span class="tag" id="session">session —</span>
+  <span class="tag">REGIME: N/A</span>
+  <span class="spacer"></span>
+  <span class="tag">NO BROKER · MANUAL EXECUTION</span>
+</header>
+
+<main>
+  <div class="controls">
+    <label>as_of</label><input id="asof" placeholder="YYYY-MM-DD" />
+    <label>limit</label><input id="limit" class="num" value="5" style="width:56px" />
+    <button id="refresh">SCAN</button>
+    <span id="status" class="dim"></span>
+  </div>
+
+  <div id="banner" class="banner" hidden></div>
+
+  <table id="table" hidden>
+    <thead><tr>
+      <th>Action</th><th>Ticker</th><th>Last</th><th>Score</th><th>Momentum</th>
+      <th>Vol×</th><th>Turnover</th><th>RS</th><th>Entry</th><th>Stop</th>
+      <th>Target</th><th>Horizon</th><th class="reason">Why</th>
+    </tr></thead>
+    <tbody id="rows"></tbody>
+  </table>
+</main>
+
+<footer>
+  Research &amp; decision-support only — not financial advice, not a broker. Probabilities
+  and P&amp;L shown here are deterministic sample outputs; the calibrated engine arrives in Phase 4.
+  You execute every trade yourself.
+</footer>
+
+<script>
+const $ = s => document.querySelector(s);
+const pct = x => (x*100).toFixed(2) + '%';
+const signCls = x => x > 0 ? 'up' : (x < 0 ? 'down' : 'dim');
+
+async function load(){
+  const status = $('#status'); status.textContent = 'scanning…';
+  const limit = encodeURIComponent($('#limit').value || 5);
+  const asof = $('#asof').value.trim();
+  const url = '/opportunities/top?limit=' + limit + (asof ? '&as_of=' + encodeURIComponent(asof) : '');
+  try{
+    const [h, r] = await Promise.all([fetch('/health').then(x=>x.json()), fetch(url).then(x=>x.json())]);
+    $('#session').textContent = 'session ' + (h.last_session || '—');
+    render(r); status.textContent = '';
+  }catch(e){ status.innerHTML = '<span class="err">error: ' + e + '</span>'; }
+}
+
+function render(r){
+  const banner = $('#banner'), table = $('#table'), rows = $('#rows');
+  rows.innerHTML = '';
+  if(r.action === 'NO_TRADE' || !r.opportunities || r.opportunities.length === 0){
+    banner.hidden = false; table.hidden = true;
+    banner.className = 'banner notrade';
+    banner.textContent = 'NO_TRADE — nothing cleared the gates as of ' + r.as_of + '.';
+    return;
+  }
+  banner.hidden = true; table.hidden = false;
+  for(const o of r.opportunities){
+    const entry = o.last_close, stop = entry*(1-o.stop_pct), target = entry*(1+o.target_pct);
+    const tr = document.createElement('tr');
+    tr.innerHTML =
+      `<td><span class="badge buy">BUY</span></td>`+
+      `<td><b>${o.instrument_id}</b></td>`+
+      `<td class="num">${entry?.toFixed(2) ?? '—'}</td>`+
+      `<td class="num">${o.score.toFixed(3)}</td>`+
+      `<td class="num ${signCls(o.momentum)}">${pct(o.momentum)}</td>`+
+      `<td class="num">${o.volume_ratio.toFixed(1)}×</td>`+
+      `<td class="num dim">${Number(o.avg_turnover).toLocaleString()}</td>`+
+      `<td class="num">${o.rs_percentile.toFixed(2)}</td>`+
+      `<td class="num dim">next open</td>`+
+      `<td class="num down">${stop.toFixed(2)}</td>`+
+      `<td class="num up">${target.toFixed(2)}</td>`+
+      `<td class="num">${o.horizon_sessions}d</td>`+
+      `<td class="reason">${o.reason}</td>`;
+    rows.appendChild(tr);
+  }
+}
+
+$('#refresh').addEventListener('click', load);
+load();
+</script>
+</body>
+</html>

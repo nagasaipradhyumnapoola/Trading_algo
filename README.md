@@ -9,7 +9,7 @@ An agentic, market-wide opportunity-discovery and quant decision-support engine 
 
 `DISCOVER → RESEARCH → DEBATE → QUANTIFY → RISK-CHECK → RANK → RECOMMEND → OBSERVE → LEARN`
 
-![Status](https://img.shields.io/badge/status-Phase%201%20·%20baseline-orange)
+![Status](https://img.shields.io/badge/status-Phase%201%20MVP%20✓%20(sample%20data)-brightgreen)
 ![Market](https://img.shields.io/badge/market-NSE%20%2F%20BSE-blue)
 ![Agents](https://img.shields.io/badge/AI%20agents-9-8A2BE2)
 ![LLM](https://img.shields.io/badge/LLM%20access-gateway%20only-6f42c1)
@@ -144,6 +144,21 @@ pytest -q
 
 The real `.env` is **git-ignored** and kept separate; only `.env.example` (placeholders) is tracked. All provider/API keys stay server-side.
 
+### See it run (Phase 1, sample data)
+
+```bash
+# End-to-end pipeline: scan → baseline signal → backtest → paper ledger (honest, net of costs)
+python scripts/pipeline_demo.py
+
+# The dark terminal + JSON API on a sample universe
+python -m uvicorn apps.api.app.main:app --port 8000
+# then open http://localhost:8000  (or GET /opportunities/top?limit=5)
+```
+
+Phase 1 runs on a clearly-labelled **sample** universe so the scanner, `NO_TRADE`
+path and net-of-cost backtest are exercisable end-to-end. A real EOD feed and
+Postgres persistence land in Phase 2 behind the same interfaces.
+
 ---
 
 ## Build phases
@@ -153,7 +168,7 @@ The [phase-wise plan](docs/PHASE_WISE_BUILD_PLAN.md) is the authoritative build 
 | Phase | Focus | State |
 |---|---|---|
 | **0** | Charter, data feasibility, fixed outcome definitions | 🟡 seeded ([outcome](docs/outcome-definitions.md) · [sources](docs/data-sources.md) · [risk](docs/risk-policy.md)) |
-| **1** | Data spine + deterministic baseline + honest backtest + paper ledger | 🔵 **in progress** — spine · scanner · baseline · backtest · ledger done; API wiring + tiny UI left |
+| **1** | Data spine + deterministic baseline + honest backtest + paper ledger | ✅ **MVP done (sample data)** — spine · scanner · baseline · backtest · ledger · API · terminal. Real EOD feed + Postgres persistence = Phase 2 |
 | **2** | Reliable data platform + point-in-time feature store | ⚪ planned |
 | **3** | Discovery + filings + structured LLM extraction (the `LLMGateway` + agents) | ⚪ planned |
 | **4** | Quant, event studies, calibrated ranking | ⚪ planned |

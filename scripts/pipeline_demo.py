@@ -9,9 +9,8 @@ Run:
 
 from __future__ import annotations
 
-import random
 import sys
-from datetime import date, timedelta
+from datetime import timedelta
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -24,50 +23,14 @@ from services.evaluation import (            # noqa: E402
     PaperSignal,
     run_backtest,
 )
-from services.ingestion import (             # noqa: E402
-    Bar,
-    InMemoryBarRepository,
-    Instrument,
-    InstrumentMaster,
-)
+from services.ingestion.sample import SAMPLE_START, build_sample_universe  # noqa: E402
 from services.quant import ScanConfig, scan  # noqa: E402
 
-START = date(2026, 1, 1)
-N = 60
-RNG = random.Random(7)
-
-
-def _write_path(repo, iid, drift, base_price, base_vol):
-    price = base_price
-    closes = []
-    for _ in range(N):
-        price *= 1 + drift + RNG.uniform(-0.02, 0.02)
-        closes.append(price)
-    for i, c in enumerate(closes):
-        prev = closes[i - 1] if i > 0 else c
-        o, cl = prev, c
-        hi = max(o, cl) * (1 + RNG.uniform(0.0, 0.01))
-        lo = min(o, cl) * (1 - RNG.uniform(0.0, 0.01))
-        vol = base_vol * (2 if i % 5 == 0 else 1)            # periodic volume spike
-        repo.upsert(Bar(instrument_id=iid, session_date=START + timedelta(days=i),
-                        open=round(o, 2), high=round(hi, 2), low=round(lo, 2),
-                        close=round(cl, 2), volume=vol, source="synthetic"))
-
-
-def build_universe():
-    repo = InMemoryBarRepository()
-    _write_path(repo, "MOMO", 0.006, 100, 40000)     # uptrend, liquid
-    _write_path(repo, "CHOP", 0.000, 200, 40000)     # sideways
-    _write_path(repo, "WEAK", -0.006, 150, 40000)    # downtrend -> filtered
-    _write_path(repo, "ILLQ", 0.006, 90, 30)         # uptrend but illiquid -> filtered
-    master = InstrumentMaster([
-        Instrument(instrument_id=x, symbol=x, name=x) for x in ("MOMO", "CHOP", "WEAK", "ILLQ")
-    ])
-    return repo, master
+START = SAMPLE_START
 
 
 def main() -> None:
-    repo, master = build_universe()
+    repo, master, _ = build_sample_universe()
     strat = BaselineStrategy()
     ledger = PaperLedger()
     signals, no_trade_days = [], 0
