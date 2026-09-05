@@ -1,0 +1,5 @@
+instrument_id,symbol,name,exchange,isin,sector,listing_date,status
+INDA0001,RELIANCE,Reliance Industries Ltd,NSE,INE002A01018,Energy,1995-11-29,LISTED
+INDA0002,TCS,Tata Consultancy Services Ltd,NSE,INE467B01029,IT,2004-08-25,LISTED
+INDA0003,SMALLCO,Small Cap Co Ltd,NSE,INE000X01011,Industrials,2019-03-10,LISTED
+INDA0004,OLDCO,Delisted Holdings Ltd,BSE,INE000Y01012,Misc,2001-01-05,DELISTED
