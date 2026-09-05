@@ -4,3 +4,33 @@ Leakage-controlled, point-in-time, immutable reporting. Keeps training /
 validation / untouched test / paper / live-journal as separate labeled datasets.
 Phase 1 seeds the leakage-safe backtester + paper ledger.
 """
+
+from .backtest import (
+    BacktestReport,
+    Outcome,
+    Trade,
+    chronological_split,
+    report_for,
+    run_backtest,
+    simulate,
+)
+from .costs import CostModel
+from .paper_ledger import Action, PaperLedger, PaperSignal
+from .strategy import BASELINE_VERSION, BaselineStrategy, TradeSignal
+
+__all__ = [
+    "CostModel",
+    "BaselineStrategy",
+    "TradeSignal",
+    "BASELINE_VERSION",
+    "simulate",
+    "run_backtest",
+    "report_for",
+    "chronological_split",
+    "Trade",
+    "Outcome",
+    "BacktestReport",
+    "PaperLedger",
+    "PaperSignal",
+    "Action",
+]

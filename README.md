@@ -9,7 +9,7 @@ An agentic, market-wide opportunity-discovery and quant decision-support engine 
 
 `DISCOVER → RESEARCH → DEBATE → QUANTIFY → RISK-CHECK → RANK → RECOMMEND → OBSERVE → LEARN`
 
-![Status](https://img.shields.io/badge/status-Phase%201%20·%20data%20spine-orange)
+![Status](https://img.shields.io/badge/status-Phase%201%20·%20baseline-orange)
 ![Market](https://img.shields.io/badge/market-NSE%20%2F%20BSE-blue)
 ![Agents](https://img.shields.io/badge/AI%20agents-9-8A2BE2)
 ![LLM](https://img.shields.io/badge/LLM%20access-gateway%20only-6f42c1)
@@ -153,7 +153,7 @@ The [phase-wise plan](docs/PHASE_WISE_BUILD_PLAN.md) is the authoritative build 
 | Phase | Focus | State |
 |---|---|---|
 | **0** | Charter, data feasibility, fixed outcome definitions | 🟡 seeded ([outcome](docs/outcome-definitions.md) · [sources](docs/data-sources.md) · [risk](docs/risk-policy.md)) |
-| **1** | Data spine + deterministic baseline + honest backtest + paper ledger | 🔵 **in progress** |
+| **1** | Data spine + deterministic baseline + honest backtest + paper ledger | 🔵 **in progress** — spine · scanner · baseline · backtest · ledger done; API wiring + tiny UI left |
 | **2** | Reliable data platform + point-in-time feature store | ⚪ planned |
 | **3** | Discovery + filings + structured LLM extraction (the `LLMGateway` + agents) | ⚪ planned |
 | **4** | Quant, event studies, calibrated ranking | ⚪ planned |
