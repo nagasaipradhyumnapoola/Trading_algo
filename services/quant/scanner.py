@@ -98,7 +98,7 @@ def scan(
                 instrument_id=f.instrument_id, as_of=as_of, score=score,
                 momentum=f.values["momentum"], volume_ratio=vr,
                 avg_turnover=f.values["avg_turnover"], rs_percentile=rs,
-                reason=(f"momentum={f.values['momentum']:.2%}, vol×{vr:.1f}, "
+                reason=(f"momentum={f.values['momentum']:.2%}, vol x{vr:.1f}, "
                         f"turnover={f.values['avg_turnover']:,.0f}"),
                 features=f,
             )
