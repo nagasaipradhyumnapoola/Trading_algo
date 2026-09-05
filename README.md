@@ -138,8 +138,10 @@ Every recommendation ships with allocation, quantity, entry range, target, inval
 - [ ] **Phase 3** — Validation: point-in-time backtest · walk-forward · paper trading · prediction grading · attribution
 - [ ] **Phase 4** — Hardening: observability · retry/fallback · rate limits · drift detection
 
+🗺️ **Phase-wise build plan & gates:** [`docs/PHASE_WISE_BUILD_PLAN.md`](docs/PHASE_WISE_BUILD_PLAN.md) — the authoritative build order
 📄 **Full engineering spec:** [`docs/INDIAN_EQUITY_AI_MASTER_SPEC.md`](docs/INDIAN_EQUITY_AI_MASTER_SPEC.md)
 🎯 **Performance, P&L & success requirements:** [`CLAUDE.md`](CLAUDE.md) — the honesty-first directive that governs the whole build
+🎨 **UI design guide:** [`docs/UI_DESIGN_GUIDE.md`](docs/UI_DESIGN_GUIDE.md) — dark techy terminal, greyscale + red/green only
 
 ---
 

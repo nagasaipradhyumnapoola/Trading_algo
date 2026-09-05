@@ -6,6 +6,26 @@
 > The goal is not "build a cool trading dashboard" — it is to discover and rank
 > genuine, positive-expectancy opportunities and to report performance honestly.
 
+## Governing documents (read before building)
+
+- **Build order & delivery gates:** [`docs/PHASE_WISE_BUILD_PLAN.md`](docs/PHASE_WISE_BUILD_PLAN.md)
+  — the authoritative phase sequence. Where it conflicts with the master spec on
+  sequencing or structure, the phase plan wins. **Do not build terminal polish
+  before a reproducible baseline has an out-of-sample + paper-trading record.**
+- **Full engineering spec:** [`docs/INDIAN_EQUITY_AI_MASTER_SPEC.md`](docs/INDIAN_EQUITY_AI_MASTER_SPEC.md)
+- **UI look & feel:** [`docs/UI_DESIGN_GUIDE.md`](docs/UI_DESIGN_GUIDE.md) — dark,
+  techy terminal; greyscale (black/white/grey shades) with **green = up/buy/pass**
+  and **red = down/sell/veto** as the only meaningful colors; monospace numbers.
+
+## Environment & secrets policy
+
+- **`.env` is maintained separately and is never committed.** Only
+  [`.env.example`](.env.example) (placeholders) lives in Git; `.gitignore` excludes
+  the real `.env`.
+- All provider/API keys (FreeLLMAPI, market data, news) are **server-side only** —
+  never shipped to or referenced from the frontend.
+- Copy `.env.example` → `.env` locally and fill real values. Keep `BROKER_WRITE_ENABLED=false`.
+
 ## Core Objective
 
 The system must be engineered specifically to discover and rank
