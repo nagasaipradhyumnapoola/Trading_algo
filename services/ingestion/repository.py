@@ -61,6 +61,10 @@ class InMemoryBarRepository:
     def all_latest(self) -> list[Bar]:
         return [hist[-1] for hist in self._history.values()]
 
+    def history_bars(self) -> list[Bar]:
+        """Every bar across all correction versions (for persistence/audit)."""
+        return [bar for hist in self._history.values() for bar in hist]
+
     def as_of(
         self, instrument_id: str, timeframe: Timeframe, as_of: date,
         *, source: str | None = None, adjusted: bool = False,
