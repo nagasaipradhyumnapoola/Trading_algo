@@ -162,6 +162,9 @@ python scripts/discovery_demo.py
 
 # Phase 4: PIT dataset -> purged walk-forward -> calibrated model vs baseline
 python scripts/quant_demo.py
+
+# Phase 5: candidate -> prob -> risk veto -> sizing -> rec -> rotation -> paper + NAV rebuild
+python scripts/phase5_demo.py
 ```
 
 Phase 1 runs on a clearly-labelled **sample** universe so the scanner, `NO_TRADE`
@@ -181,7 +184,7 @@ The [phase-wise plan](docs/PHASE_WISE_BUILD_PLAN.md) is the authoritative build 
 | **2** | Reliable data platform + point-in-time feature store | ✅ **core done (sample data)** — corporate actions/adjustment · calendar · universe membership · data-quality · Parquet persistence · PIT feature store · doc store · job runner. Real feeds + Prefect = later |
 | **3** | Discovery + filings + structured LLM extraction (the `LLMGateway` + agents) | ✅ **core done (mock LLM)** — gateway live · entity resolution · News/Fundamental agents · review queue · discovery scoring · extraction eval. Real FreeLLMAPI routes = drop-in |
 | **4** | Quant, event studies, calibrated ranking | ✅ **core done (sample data)** — event studies · fixed labels · logistic vs base-rate/momentum · isotonic/Platt calibration + reliability · purged walk-forward · model registry. LightGBM/XGBoost = drop-in |
-| **5** | Risk, portfolio, paper trading, rotation | ⚪ planned |
+| **5** | Risk, portfolio, paper trading, rotation | ✅ **core done (sample data)** — risk vetoes · position sizing · rotation · paper simulator (NAV rebuilds from ledger) · performance dashboard · complete recommendation object |
 | **6** | Terminal UI, alerts, grounded chat | ⚪ planned |
 | **7** | Production hardening + controlled release | ⚪ planned |
 

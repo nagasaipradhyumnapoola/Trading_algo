@@ -18,6 +18,19 @@ from .costs import CostModel
 from .cv import purged_walk_forward
 from .labels import LABEL_VERSION, Label, LabelConfig, label_dataset, label_signal
 from .paper_ledger import Action, PaperLedger, PaperSignal
+from .paper_trading import (
+    ClosedTrade,
+    PaperBroker,
+    PaperFill,
+    Side,
+    reconstruct_cash,
+)
+from .performance import (
+    Bucket,
+    PerformanceReport,
+    compute_performance,
+    precision_by_bucket,
+)
 from .registry import (
     ExperimentRecord,
     ExperimentRegistry,
@@ -51,4 +64,13 @@ __all__ = [
     "label_signal",
     "label_dataset",
     "purged_walk_forward",
+    "PaperBroker",
+    "PaperFill",
+    "ClosedTrade",
+    "Side",
+    "reconstruct_cash",
+    "compute_performance",
+    "PerformanceReport",
+    "precision_by_bucket",
+    "Bucket",
 ]

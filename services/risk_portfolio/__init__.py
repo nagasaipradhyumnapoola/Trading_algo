@@ -12,6 +12,7 @@ from .portfolio import (
     RotationConfig,
     recommend_rotation,
 )
+from .recommendation import RecAction, Recommendation, build_recommendation
 from .risk_engine import (
     RiskConfig,
     RiskFlag,
@@ -38,4 +39,7 @@ __all__ = [
     "Move",
     "RotationConfig",
     "recommend_rotation",
+    "Recommendation",
+    "RecAction",
+    "build_recommendation",
 ]
