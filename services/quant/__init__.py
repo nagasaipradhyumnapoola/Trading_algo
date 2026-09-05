@@ -5,6 +5,7 @@ expected value, and ranking. Every number in the system originates here, never
 from an LLM.
 """
 
+from .event_study import AggregateStudy, EventStudy, EventStudyResult
 from .features import FEATURE_SET_VERSION, FeatureSnapshot, Quality, compute_features
 from .scanner import ScanCandidate, ScanConfig, scan
 
@@ -16,4 +17,7 @@ __all__ = [
     "scan",
     "ScanConfig",
     "ScanCandidate",
+    "EventStudy",
+    "EventStudyResult",
+    "AggregateStudy",
 ]

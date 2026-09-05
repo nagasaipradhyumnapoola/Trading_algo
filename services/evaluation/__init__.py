@@ -15,6 +15,7 @@ from .backtest import (
     simulate,
 )
 from .costs import CostModel
+from .labels import LABEL_VERSION, Label, LabelConfig, label_dataset, label_signal
 from .paper_ledger import Action, PaperLedger, PaperSignal
 from .registry import (
     ExperimentRecord,
@@ -43,4 +44,9 @@ __all__ = [
     "ExperimentRegistry",
     "is_reproducible",
     "metrics_match",
+    "Label",
+    "LabelConfig",
+    "LABEL_VERSION",
+    "label_signal",
+    "label_dataset",
 ]
