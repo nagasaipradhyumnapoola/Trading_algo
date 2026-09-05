@@ -16,6 +16,20 @@
 - **UI look & feel:** [`docs/UI_DESIGN_GUIDE.md`](docs/UI_DESIGN_GUIDE.md) — dark,
   techy terminal; greyscale (black/white/grey shades) with **green = up/buy/pass**
   and **red = down/sell/veto** as the only meaningful colors; monospace numbers.
+- **LLM access:** [`docs/LLM_GATEWAY.md`](docs/LLM_GATEWAY.md) — **mandatory.**
+
+### LLM access rule (non-negotiable)
+
+Every LLM call goes through the internal `LLMGateway` service. **No agent, API
+route, worker, or frontend component may call FreeLLMAPI or any provider
+directly.** Model names are never hard-coded in prompts or agents — routing comes
+from versioned task policies + a capability registry. Every call is schema- and
+citation-validated and written to an immutable `llm_run` record; on total route
+failure the system enters degraded mode (deterministic results preserved,
+LLM-dependent recommendations suppressed, nothing fabricated). LLMs do reasoning,
+extraction, summarization and synthesis **only** — probabilities, expected return,
+risk vetoes, position sizing, P&L and backtest evaluation are deterministic engine
+outputs, never LLM outputs. Gateway is implemented in Phase 3; reserved now.
 
 ## Environment & secrets policy
 

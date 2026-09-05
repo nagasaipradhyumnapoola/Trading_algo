@@ -5,15 +5,15 @@
 ### An AI research floor that hunts the *entire* Indian market for trades — before you even ask.
 
 **Not a chatbot. Not a screener. Not an autopilot broker.**
-It's an agentic, market-wide opportunity-discovery and quant decision-support engine for NSE/BSE.
+An agentic, market-wide opportunity-discovery and quant decision-support engine for NSE/BSE.
 
 `DISCOVER → RESEARCH → DEBATE → QUANTIFY → RISK-CHECK → RANK → RECOMMEND → OBSERVE → LEARN`
 
-![Status](https://img.shields.io/badge/status-Phase%201%20scaffold-orange)
+![Status](https://img.shields.io/badge/status-Phase%201%20·%20data%20spine-orange)
 ![Market](https://img.shields.io/badge/market-NSE%20%2F%20BSE-blue)
 ![Agents](https://img.shields.io/badge/AI%20agents-9-8A2BE2)
+![LLM](https://img.shields.io/badge/LLM%20access-gateway%20only-6f42c1)
 ![Execution](https://img.shields.io/badge/broker%20writes-NONE-red)
-![License](https://img.shields.io/badge/license-TBD-lightgrey)
 
 </div>
 
@@ -31,7 +31,23 @@ Then it watches what actually happens and **grades itself**. Every prediction. W
 
 ---
 
-## How it thinks
+## How it works — step by step
+
+1. **Ingest** — instrument master + point-in-time market data, filings, news and fundamentals land in an immutable, timestamped store.
+2. **Scan** — deterministic scanners sweep thousands of tickers for volume/volatility/breakout/relative-strength anomalies.
+3. **Discover** — the Discovery Agent turns anomalies + disclosures + web search into *candidates the user never asked for*.
+4. **Resolve & dedup** — entity resolution links names/tickers/ISINs; syndicated news collapses to one event, not fifty confirmations.
+5. **Research (parallel)** — News, Market, Fundamental, Sentiment and Historical-Analogue agents investigate each candidate at once.
+6. **Debate** — 🐂 Bull and 🐻 Bear build opposing cases from the **same** evidence set.
+7. **Judge** — the Research Judge resolves the debate into a structured thesis. It **cannot** override risk.
+8. **Quantify** — deterministic engines compute features, event-study returns, a **calibrated** probability and expected value. *Numbers never come from an LLM.*
+9. **Risk-check** — the independent risk engine applies liquidity/spread/circuit/manipulation/concentration gates and can **VETO**.
+10. **Rank & recommend** — survivors are scored and the top opportunities surface as `BUY / SELL / HOLD / ROTATE / NO_TRADE`, each with entry, target, invalidation, sizing and evidence.
+11. **Observe & learn** — every recommendation is logged, later **graded** against a fixed rule, and attributed to the agents/models/regime responsible.
+
+---
+
+## Architecture
 
 ```text
       NSE / BSE  ·  Web  ·  News  ·  Filings  ·  Social
@@ -41,7 +57,7 @@ Then it watches what actually happens and **grades itself**. Every prediction. W
                          │
                          ▼
         ACTIVE SCANNER  ── thousands of tickers
-                         │   vol/price/breakout anomalies
+                         │
                          ▼
         ENTITY + EVENT ENGINE  ── narrows to hundreds
                          │
@@ -49,6 +65,7 @@ Then it watches what actually happens and **grades itself**. Every prediction. W
         ┌──────── AI RESEARCH FLOOR (9 agents) ────────┐
         │  News · Market · Fundamental · Sentiment      │
         │  Historical Analogue · Discovery              │
+        │        (all LLM calls via LLMGateway)         │
         └───────────────────┬───────────────────────────┘
                              ▼
                    🐂 BULL  ⚔️  BEAR 🐻   (same evidence)
@@ -64,9 +81,7 @@ Then it watches what actually happens and **grades itself**. Every prediction. W
         BUY · SELL · HOLD · ROTATE · NO_TRADE  →  you
 ```
 
----
-
-## Two brains, kept strictly apart
+### Two brains, kept strictly apart
 
 | 🧠 The LLM brain (9 agents) | 🔢 The math brain (deterministic) |
 |---|---|
@@ -74,7 +89,17 @@ Then it watches what actually happens and **grades itself**. Every prediction. W
 | Discovery · News · Market read · Fundamental · Sentiment · Historical · Bull · Bear · Judge | Features (RSI/ATR/VWAP/vol) · Event studies (AR/CAR) · LightGBM/XGBoost · **Calibration** · Ranking |
 | *An LLM saying "94% confident" is worthless.* | *A model whose "90–95%" bucket hits 91.7% in reality is gold.* |
 
-**The line is sacred:** LLMs interpret evidence; deterministic code produces the numbers. They never blur.
+### One door to every LLM — the `LLMGateway`
+
+**Every** LLM call goes through a single mandatory routing service. No agent, API route, worker or frontend component calls a provider directly.
+
+```text
+agent → LLMGateway.request(task, payload) → route select (config, not code)
+      → structured-JSON + citation validation → retry/fallback → immutable llm_run
+      → validated result OR explicit failure (degraded mode, never fabricated)
+```
+
+Model names are never hard-coded — routing comes from **versioned task policies** + a **capability registry**. If all routes fail, deterministic results survive and LLM-dependent recommendations are suppressed. Full contract: [`docs/LLM_GATEWAY.md`](docs/LLM_GATEWAY.md).
 
 ---
 
@@ -83,7 +108,7 @@ Then it watches what actually happens and **grades itself**. Every prediction. W
 | # | Agent | Job |
 |---|-------|-----|
 | 1 | **Discovery** | Find opportunities you never asked about; generate its own follow-up searches |
-| 2 | **News / Event** | Classify the catalyst — is it material, novel, already priced in? |
+| 2 | **News / Event** | Classify the catalyst — material, novel, already priced in? |
 | 3 | **Market** | Read price action, momentum, breakouts (numbers from code, not the LLM) |
 | 4 | **Fundamental** | Is the catalyst *financially* meaningful to the business? |
 | 5 | **Sentiment** | Dedup syndicated wires; sniff out pump-and-dump and bot activity |
@@ -94,84 +119,99 @@ Then it watches what actually happens and **grades itself**. Every prediction. W
 
 ---
 
-## What comes out
+## Getting started
 
-```json
-{
-  "action": "BUY",
-  "ticker": "XYZ",
-  "allocation_rupees": 2000,
-  "quantity": 5,
-  "entry_low": 410, "entry_high": 415,
-  "target": 445, "invalidation": 398,
-  "holding_period": "1-5D",
-  "probability": 0.914,
-  "expected_return": 0.031,
-  "risk_verdict": "PASS",
-  "historical_sample_size": 143,
-  "thesis": "…", "bull_case": "…", "bear_case": "…",
-  "evidence": [ … ],
-  "what_changes_decision": [ … ]
-}
+**Prerequisites:** Python 3.11+, Docker (for Postgres/TimescaleDB + Redis).
+
+```bash
+git clone https://github.com/nagasaipradhyumnapoola/Trading_algo.git
+cd Trading_algo
+
+# 1) Configure environment (never commit the real .env)
+cp .env.example .env        # then fill in values
+
+# 2) Bring up local datastores
+docker compose up -d        # Postgres/TimescaleDB + Redis
+
+# 3) Python env + dependencies
+python -m venv .venv
+# Windows: .venv\Scripts\activate    |    macOS/Linux: source .venv/bin/activate
+pip install -e ".[dev]"
+
+# 4) Run the tests
+pytest -q
 ```
 
-Every recommendation ships with allocation, quantity, entry range, target, invalidation, a **calibrated** probability, the historical sample behind it, both sides of the debate, the raw evidence — and exactly what would prove it wrong.
+The real `.env` is **git-ignored** and kept separate; only `.env.example` (placeholders) is tracked. All provider/API keys stay server-side.
 
 ---
 
-## The laws we don't break
+## Build phases
 
-- **Point-in-time or it didn't happen.** The historical model sees *only* data that existed at decision time. No look-ahead, no survivorship, no future-news leakage.
-- **Dedup the noise.** Eight copies of one Reuters wire count as **one** information event, not eight confirmations.
-- **Small-caps welcome, manipulation isn't.** We don't exclude small companies — we flag pump behavior, low-float games and recycled news. High manipulation risk → **risk veto**.
-- **Every prediction gets graded.** Successes *and* losses, attributed to the agent, model and market regime responsible.
-- **`NO_TRADE` is a real answer.** The system never forces a trade to look busy.
-- **Risk has the final no.** The Judge proposes; the independent Risk Engine can always veto.
+The [phase-wise plan](docs/PHASE_WISE_BUILD_PLAN.md) is the authoritative build order. Data integrity and a validated baseline come **before** any terminal polish — a beautiful dashboard around unvalidated signals is not a product.
 
----
+| Phase | Focus | State |
+|---|---|---|
+| **0** | Charter, data feasibility, fixed outcome definitions | 🟡 seeded ([outcome](docs/outcome-definitions.md) · [sources](docs/data-sources.md) · [risk](docs/risk-policy.md)) |
+| **1** | Data spine + deterministic baseline + honest backtest + paper ledger | 🔵 **in progress** |
+| **2** | Reliable data platform + point-in-time feature store | ⚪ planned |
+| **3** | Discovery + filings + structured LLM extraction (the `LLMGateway` + agents) | ⚪ planned |
+| **4** | Quant, event studies, calibrated ranking | ⚪ planned |
+| **5** | Risk, portfolio, paper trading, rotation | ⚪ planned |
+| **6** | Terminal UI, alerts, grounded chat | ⚪ planned |
+| **7** | Production hardening + controlled release | ⚪ planned |
 
-## Roadmap
-
-- [x] **Phase 0** — Repo, spec, scaffold
-- [ ] **Phase 1** — Discovery MVP: universe · scanner · web/news · 9 agents · AI gateway · basic risk · terminal UI → *"Find the best opportunity right now."*
-- [ ] **Phase 2** — Quant: event DB · feature store · LightGBM/XGBoost · calibration · ranking · portfolio allocation
-- [ ] **Phase 3** — Validation: point-in-time backtest · walk-forward · paper trading · prediction grading · attribution
-- [ ] **Phase 4** — Hardening: observability · retry/fallback · rate limits · drift detection
-
-🗺️ **Phase-wise build plan & gates:** [`docs/PHASE_WISE_BUILD_PLAN.md`](docs/PHASE_WISE_BUILD_PLAN.md) — the authoritative build order
-📄 **Full engineering spec:** [`docs/INDIAN_EQUITY_AI_MASTER_SPEC.md`](docs/INDIAN_EQUITY_AI_MASTER_SPEC.md)
-🎯 **Performance, P&L & success requirements:** [`CLAUDE.md`](CLAUDE.md) — the honesty-first directive that governs the whole build
-🎨 **UI design guide:** [`docs/UI_DESIGN_GUIDE.md`](docs/UI_DESIGN_GUIDE.md) — dark techy terminal, greyscale + red/green only
+**Delivery gates** (from the plan): baseline must be *reproducible* (end P1) → LLM extraction must be *grounded* (end P3) → ranking must *beat baseline on untouched data after costs* (end P4) → paper trading must *match its simulated assumptions* (end P5) before anything is called production-ready.
 
 ---
 
 ## Stack
 
-**Backend** FastAPI · async workers · PostgreSQL/TimescaleDB · DuckDB + Parquet · Redis · pgvector
-**ML** LightGBM · XGBoost · logistic baseline · probability calibration
-**LLM** FreeLLM behind a configurable AI gateway (routing · fallback · logging)
-**Frontend** Next.js · React — a TradingView-style terminal with a live AI research floor
+**Backend** FastAPI · async workers · PostgreSQL/TimescaleDB · DuckDB + Parquet · Redis · MinIO (object store)
+**ML** LightGBM · XGBoost · logistic baseline · probability calibration · MLflow
+**LLM** FreeLLMAPI behind the mandatory `LLMGateway` (routing · validation · fallback · immutable audit)
+**Frontend** Next.js · React · Tailwind — a dark, techy TradingView-style terminal ([design guide](docs/UI_DESIGN_GUIDE.md))
 
 ---
 
-## Repo layout
+## Repository layout
 
 ```text
-indian-alpha/
-├── apps/
-│   ├── web/                 # Next.js trading terminal
-│   └── api/                 # FastAPI gateway
-├── services/
-│   ├── discovery/  ingestion/  market_scanner/  web_search/  news/
-│   ├── entity_resolution/  event_engine/
-│   ├── agents/              # the 9 AI roles
-│   ├── ai_gateway/  quant/  ml/  calibration/
-│   ├── risk/  portfolio/  ranking/  memory/
-│   └── backtesting/  paper_trading/  alerts/
-├── data/  { raw · normalized · features }
-├── models/  notebooks/  tests/  scripts/  docker/  migrations/
-└── docs/
+Trading_algo/
+├─ apps/
+│  ├─ web/                    # Next.js terminal + chat (Phase 6)
+│  └─ api/                    # FastAPI request layer
+├─ services/
+│  ├─ ingestion/              # source adapters, calendars, normalization  ← Phase 1
+│  ├─ research_workers/
+│  │  ├─ agents/              # the 9 AI roles (+ Pydantic contracts)
+│  │  └─ llm_gateway/         # MANDATORY single path to any LLM
+│  ├─ quant/                  # features, event studies, models, ranking, calibration
+│  ├─ risk_portfolio/         # deterministic vetoes, sizing, rotation
+│  └─ evaluation/             # backtests, walk-forward, paper ledger
+├─ packages/                  # contracts (schemas) · ui · config
+├─ data-contracts/            # schema definitions + migrations
+├─ infra/                     # docker, IaC, monitoring
+├─ data/                      # raw · normalized · features   (contents git-ignored)
+├─ notebooks/  models/  scripts/  migrations/  docker/
+├─ tests/                     # unit · integration · e2e · fixtures
+├─ docs/                      # spec, phase plan, gateway, UI guide, policies
+├─ CLAUDE.md                  # performance/P&L directive + governing rules
+├─ .env.example  docker-compose.yml  pyproject.toml
 ```
+
+---
+
+## Documentation
+
+| Doc | What's in it |
+|---|---|
+| [`CLAUDE.md`](CLAUDE.md) | Performance, P&L & success requirements; governing rules (honesty-first) |
+| [`docs/PHASE_WISE_BUILD_PLAN.md`](docs/PHASE_WISE_BUILD_PLAN.md) | Authoritative build order, data contracts, delivery gates |
+| [`docs/INDIAN_EQUITY_AI_MASTER_SPEC.md`](docs/INDIAN_EQUITY_AI_MASTER_SPEC.md) | Full engineering spec |
+| [`docs/LLM_GATEWAY.md`](docs/LLM_GATEWAY.md) | Mandatory LLM routing architecture |
+| [`docs/UI_DESIGN_GUIDE.md`](docs/UI_DESIGN_GUIDE.md) | Dark techy terminal — palette + rules |
+| [`docs/outcome-definitions.md`](docs/outcome-definitions.md) · [`data-sources.md`](docs/data-sources.md) · [`risk-policy.md`](docs/risk-policy.md) | Phase 0 policy docs |
 
 ---
 
@@ -180,7 +220,8 @@ indian-alpha/
 This is a **research and decision-support** project, **not** financial advice and **not** a broker.
 
 - The ~90% precision figure is a **research target on a highly selective, high-confidence subset** — never a promise, never a guarantee.
-- It will have losing trades, and it is built to report them honestly.
+- +10% monthly is an **aspirational evaluation hypothesis**, not a design requirement.
+- It will have losing trades, and it is built to report them honestly (report 62% if it's 62%).
 - No `place_order`, `modify_order`, `cancel_order`, withdrawals or transfers exist — by design.
 - **You** make every decision and execute every trade yourself.
 
