@@ -153,6 +153,9 @@ python scripts/pipeline_demo.py
 # The dark terminal + JSON API on a sample universe
 python -m uvicorn apps.api.app.main:app --port 8000
 # then open http://localhost:8000  (or GET /opportunities/top?limit=5)
+
+# Phase 2: point-in-time reproducibility (Parquet reload -> identical dataset)
+python scripts/reproducibility_demo.py
 ```
 
 Phase 1 runs on a clearly-labelled **sample** universe so the scanner, `NO_TRADE`
@@ -169,7 +172,7 @@ The [phase-wise plan](docs/PHASE_WISE_BUILD_PLAN.md) is the authoritative build 
 |---|---|---|
 | **0** | Charter, data feasibility, fixed outcome definitions | 🟡 seeded ([outcome](docs/outcome-definitions.md) · [sources](docs/data-sources.md) · [risk](docs/risk-policy.md)) |
 | **1** | Data spine + deterministic baseline + honest backtest + paper ledger | ✅ **MVP done (sample data)** — spine · scanner · baseline · backtest · ledger · API · terminal. Real EOD feed + Postgres persistence = Phase 2 |
-| **2** | Reliable data platform + point-in-time feature store | ⚪ planned |
+| **2** | Reliable data platform + point-in-time feature store | ✅ **core done (sample data)** — corporate actions/adjustment · calendar · universe membership · data-quality · Parquet persistence · PIT feature store · doc store · job runner. Real feeds + Prefect = later |
 | **3** | Discovery + filings + structured LLM extraction (the `LLMGateway` + agents) | ⚪ planned |
 | **4** | Quant, event studies, calibrated ranking | ⚪ planned |
 | **5** | Risk, portfolio, paper trading, rotation | ⚪ planned |

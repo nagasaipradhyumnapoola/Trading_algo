@@ -8,7 +8,9 @@ the system sits on this data spine.
 from .adapters import CsvEodAdapter, SourceAdapter
 from .calendar import TradingCalendar
 from .corporate_actions import CorporateAction, CorporateActionType, adjust_bars
+from .document_store import RawDocumentStore, SourceDocument, content_hash
 from .instruments import InstrumentMaster, load_instruments_csv
+from .jobs import DeadLetter, DeadLetterQueue, JobResult, run_job
 from .loader import LoadReport, load_eod
 from .models import (
     Bar,
@@ -45,4 +47,11 @@ __all__ = [
     "DataQualityReport",
     "QualityIssue",
     "Severity",
+    "RawDocumentStore",
+    "SourceDocument",
+    "content_hash",
+    "run_job",
+    "JobResult",
+    "DeadLetterQueue",
+    "DeadLetter",
 ]

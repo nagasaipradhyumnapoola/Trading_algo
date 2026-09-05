@@ -16,6 +16,12 @@ from .backtest import (
 )
 from .costs import CostModel
 from .paper_ledger import Action, PaperLedger, PaperSignal
+from .registry import (
+    ExperimentRecord,
+    ExperimentRegistry,
+    is_reproducible,
+    metrics_match,
+)
 from .strategy import BASELINE_VERSION, BaselineStrategy, TradeSignal
 
 __all__ = [
@@ -33,4 +39,8 @@ __all__ = [
     "PaperLedger",
     "PaperSignal",
     "Action",
+    "ExperimentRecord",
+    "ExperimentRegistry",
+    "is_reproducible",
+    "metrics_match",
 ]
