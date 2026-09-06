@@ -6,135 +6,399 @@
 <title>Indian Alpha — Terminal</title>
 <style>
   :root{
-    --bg:#0a0a0a; --panel:#101012; --panel-2:#16161a; --border:#24242a;
-    --border-soft:#1b1b20; --text:#f4f4f5; --text-muted:#a1a1aa; --text-dim:#6b6b74;
-    --up:#16c784; --down:#ea3943; --flat:#a1a1aa; --warn:#d4d4d8;
+    --bg:#0a0a0a; --panel:#101012; --panel-2:#16161a; --elevated:#1c1c22;
+    --border:#24242a; --border-soft:#1b1b20; --grid:#202028;
+    --text:#f4f4f5; --text-muted:#a1a1aa; --text-dim:#6b6b74;
+    --up:#16c784; --up-dim:#0e7a52; --down:#ea3943; --down-dim:#9e2a30;
+    --flat:#a1a1aa; --warn:#d4d4d8;
     --font-mono:"JetBrains Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
     --font-sans:"Inter",ui-sans-serif,system-ui,sans-serif;
   }
   *{box-sizing:border-box}
   body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font-sans);font-size:12px}
   .num{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
-  header{display:flex;align-items:center;gap:16px;padding:10px 14px;
+  .up{color:var(--up)} .down{color:var(--down)} .dim{color:var(--text-dim)} .muted{color:var(--text-muted)}
+  header{display:flex;align-items:center;gap:14px;padding:9px 14px;
     border-bottom:1px solid var(--border);background:var(--panel)}
   header .brand{font-weight:700;letter-spacing:.5px}
   header .brand b{color:var(--up)}
   .tag{font-family:var(--font-mono);font-size:10px;padding:2px 6px;border:1px solid var(--border);
     color:var(--text-dim);border-radius:2px}
-  .tag.sample{color:var(--warn)}
+  .tag.sample{color:var(--warn)} .tag.nav{color:var(--text)}
   .spacer{flex:1}
-  main{padding:14px}
-  .controls{display:flex;gap:10px;align-items:center;margin-bottom:12px}
-  .controls label{color:var(--text-muted)}
-  input{background:var(--panel-2);border:1px solid var(--border);color:var(--text);
-    font-family:var(--font-mono);padding:4px 6px;border-radius:2px;width:90px}
-  button{background:transparent;border:1px solid var(--border);color:var(--text);
-    padding:4px 10px;border-radius:2px;cursor:pointer;font-family:var(--font-mono)}
-  button:hover{background:var(--panel-2)}
-  .banner{padding:10px 12px;border:1px solid var(--border);background:var(--panel);
-    border-radius:2px;margin-bottom:12px;font-family:var(--font-mono)}
-  .banner.notrade{color:var(--flat)}
-  table{width:100%;border-collapse:collapse;background:var(--panel)}
-  th,td{padding:7px 9px;border-bottom:1px solid var(--border-soft);text-align:right;white-space:nowrap}
-  th{color:var(--text-dim);font-weight:600;text-transform:uppercase;font-size:10px;letter-spacing:.4px;
-    text-align:right;position:sticky;top:0;background:var(--panel)}
-  th:first-child,td:first-child,th:nth-child(2),td:nth-child(2),td.reason,th.reason{text-align:left}
-  tbody tr:hover{background:var(--panel-2)}
-  .badge{font-family:var(--font-mono);font-size:10px;padding:1px 6px;border-radius:2px;border:1px solid}
+  .workspace{display:grid;grid-template-columns:220px 1fr 300px;gap:10px;padding:10px}
+  .panel{background:var(--panel);border:1px solid var(--border);border-radius:2px}
+  .panel h3{margin:0;padding:8px 10px;font-size:10px;letter-spacing:.5px;text-transform:uppercase;
+    color:var(--text-dim);border-bottom:1px solid var(--border-soft);font-weight:600}
+  .panel .body{padding:8px 10px}
+  .col{display:flex;flex-direction:column;gap:10px;min-width:0}
+  /* watchlist */
+  .wl{max-height:520px;overflow:auto}
+  .wl .row{display:flex;align-items:center;gap:6px;padding:6px 10px;cursor:pointer;
+    border-bottom:1px solid var(--border-soft)}
+  .wl .row:hover{background:var(--panel-2)}
+  .wl .row.sel{background:var(--panel-2);border-left:2px solid var(--up)}
+  .wl .dot{width:6px;height:6px;border-radius:50%}
+  .wl .dot.buy{background:var(--up)} .wl .dot.veto{background:var(--down)} .wl .dot.none{background:var(--text-dim)}
+  .wl .sym{font-family:var(--font-mono);font-weight:600;flex:1}
+  /* chart */
+  .chart-wrap{position:relative}
+  svg{display:block;width:100%}
+  .chart-meta{display:flex;gap:14px;align-items:baseline;padding:8px 10px;border-bottom:1px solid var(--border-soft)}
+  .chart-meta .px{font-size:18px;font-family:var(--font-mono)}
+  /* recommendation card */
+  .rec{padding:10px}
+  .rec .top{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+  .rec .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px 14px}
+  .rec .k{color:var(--text-dim);font-size:10px;text-transform:uppercase;letter-spacing:.4px}
+  .rec .v{font-family:var(--font-mono);font-size:13px}
+  .badge{font-family:var(--font-mono);font-size:10px;padding:2px 7px;border-radius:2px;border:1px solid}
   .badge.buy{color:var(--up);border-color:var(--up)}
   .badge.sell{color:var(--down);border-color:var(--down)}
-  .up{color:var(--up)} .down{color:var(--down)} .dim{color:var(--text-dim)}
-  td.reason{color:var(--text-muted);font-family:var(--font-mono);font-size:11px}
-  footer{padding:12px 14px;color:var(--text-dim);border-top:1px solid var(--border);margin-top:14px}
-  .err{color:var(--down);font-family:var(--font-mono)}
+  .badge.hold,.badge.no_trade{color:var(--flat);border-color:var(--border)}
+  .badge.pass{color:var(--up);border-color:var(--up)}
+  .badge.veto{color:var(--down);border-color:var(--down)}
+  .badge.review{color:var(--warn);border-color:var(--warn)}
+  /* evidence */
+  .ev{padding:8px 10px;border-bottom:1px solid var(--border-soft)}
+  .ev .h{display:flex;gap:6px;align-items:center;margin-bottom:3px}
+  .ev .tier{font-size:9px;border:1px solid var(--border);padding:0 4px;border-radius:2px;color:var(--text-dim)}
+  .ev .txt{color:var(--text-muted);font-size:11px;line-height:1.4}
+  .ev .id{font-family:var(--font-mono);font-size:10px;color:var(--text-dim)}
+  /* tabs */
+  .tabs{display:flex;gap:2px;padding:0 10px;border-bottom:1px solid var(--border);background:var(--panel)}
+  .tabs button{background:transparent;border:none;border-bottom:2px solid transparent;color:var(--text-dim);
+    padding:9px 12px;cursor:pointer;font-family:var(--font-mono);font-size:11px}
+  .tabs button.active{color:var(--text);border-bottom-color:var(--up)}
+  .tabpanel{padding:12px;min-height:150px}
+  table{width:100%;border-collapse:collapse}
+  th,td{padding:6px 9px;border-bottom:1px solid var(--border-soft);text-align:right;white-space:nowrap}
+  th{color:var(--text-dim);font-weight:600;text-transform:uppercase;font-size:9px;letter-spacing:.4px}
+  th:first-child,td:first-child{text-align:left}
+  tbody tr:hover{background:var(--panel-2)}
+  .metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px}
+  .metric{background:var(--panel-2);border:1px solid var(--border-soft);border-radius:2px;padding:8px 10px}
+  .metric .k{color:var(--text-dim);font-size:10px;text-transform:uppercase}
+  .metric .v{font-family:var(--font-mono);font-size:16px;margin-top:2px}
+  .move{display:inline-block;font-family:var(--font-mono);font-size:10px;padding:1px 6px;border:1px solid var(--border);border-radius:2px;margin:2px}
+  .move.EXIT,.move.REDUCE{color:var(--down);border-color:var(--down-dim)}
+  .move.BUY,.move.ADD{color:var(--up);border-color:var(--up-dim)}
+  .move.ROTATE{color:var(--warn);border-color:var(--warn)}
+  .move.NO_TRADE,.move.HOLD{color:var(--flat)}
+  /* alerts */
+  .alert{display:flex;gap:8px;align-items:baseline;padding:6px 0;border-bottom:1px solid var(--border-soft)}
+  .sev{font-size:9px;padding:0 5px;border-radius:2px;border:1px solid}
+  .sev.INFO{color:var(--text-dim);border-color:var(--border)}
+  .sev.WARN{color:var(--warn);border-color:var(--warn)}
+  .sev.CRITICAL{color:var(--down);border-color:var(--down)}
+  /* chat */
+  .chatlog{max-height:260px;overflow:auto;margin-bottom:10px;display:flex;flex-direction:column;gap:8px}
+  .msg{padding:7px 9px;border-radius:2px;border:1px solid var(--border-soft);max-width:85%}
+  .msg.you{align-self:flex-end;background:var(--panel-2)}
+  .msg.ai{align-self:flex-start;background:var(--panel)}
+  .msg .cite{font-family:var(--font-mono);font-size:9px;color:var(--text-dim);margin-top:4px}
+  .msg.refuse{color:var(--warn)}
+  .chatbar{display:flex;gap:8px}
+  input,textarea{background:var(--panel-2);border:1px solid var(--border);color:var(--text);
+    font-family:var(--font-mono);padding:6px 8px;border-radius:2px}
+  .chatbar input{flex:1}
+  button.act{background:transparent;border:1px solid var(--border);color:var(--text);
+    padding:6px 12px;border-radius:2px;cursor:pointer;font-family:var(--font-mono)}
+  button.act:hover{background:var(--panel-2)}
+  footer{padding:10px 14px;color:var(--text-dim);border-top:1px solid var(--border);font-size:11px}
+  .veto-note{color:var(--down);font-family:var(--font-mono);font-size:11px;padding:8px 10px}
 </style>
 </head>
 <body>
 <header>
   <span class="brand">INDIAN <b>ALPHA</b></span>
   <span class="tag sample">SAMPLE DATA</span>
-  <span class="tag" id="session">session —</span>
+  <span class="tag" id="session">as_of —</span>
+  <span class="tag nav" id="navtag">NAV —</span>
   <span class="tag">REGIME: N/A</span>
   <span class="spacer"></span>
   <span class="tag">NO BROKER · MANUAL EXECUTION</span>
 </header>
 
-<main>
-  <div class="controls">
-    <label>as_of</label><input id="asof" placeholder="YYYY-MM-DD" />
-    <label>limit</label><input id="limit" class="num" value="5" style="width:56px" />
-    <button id="refresh">SCAN</button>
-    <span id="status" class="dim"></span>
+<div class="workspace">
+  <!-- LEFT: watchlist / scanner -->
+  <div class="col">
+    <div class="panel">
+      <h3>Watchlist · Scanner</h3>
+      <div class="wl" id="watchlist"></div>
+    </div>
   </div>
 
-  <div id="banner" class="banner" hidden></div>
+  <!-- CENTER: chart + recommendation -->
+  <div class="col">
+    <div class="panel chart-wrap">
+      <div class="chart-meta">
+        <span id="chart-sym" class="num" style="font-weight:600">—</span>
+        <span id="chart-px" class="px num">—</span>
+        <span id="chart-chg" class="num"></span>
+        <span class="spacer"></span>
+        <span class="dim">EOD · sample</span>
+      </div>
+      <div id="chart"></div>
+    </div>
+    <div class="panel">
+      <h3>Recommendation</h3>
+      <div id="rec" class="rec"><div class="dim body">Select a ticker.</div></div>
+    </div>
+  </div>
 
-  <table id="table" hidden>
-    <thead><tr>
-      <th>Action</th><th>Ticker</th><th>Last</th><th>Score</th><th>Momentum</th>
-      <th>Vol×</th><th>Turnover</th><th>RS</th><th>Entry</th><th>Stop</th>
-      <th>Target</th><th>Horizon</th><th class="reason">Why</th>
-    </tr></thead>
-    <tbody id="rows"></tbody>
-  </table>
-</main>
+  <!-- RIGHT: risk + evidence -->
+  <div class="col">
+    <div class="panel">
+      <h3>Risk Engine</h3>
+      <div id="risk" class="body dim">—</div>
+    </div>
+    <div class="panel">
+      <h3>Evidence</h3>
+      <div id="evidence"><div class="body dim">—</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- BOTTOM: tabs -->
+<div class="tabs" id="tabs">
+  <button data-tab="portfolio" class="active">Portfolio</button>
+  <button data-tab="performance">Performance</button>
+  <button data-tab="alerts">Alerts</button>
+  <button data-tab="chat">Chat</button>
+</div>
+<div class="tabpanel" id="tab-portfolio"></div>
+<div class="tabpanel" id="tab-performance" hidden></div>
+<div class="tabpanel" id="tab-alerts" hidden></div>
+<div class="tabpanel" id="tab-chat" hidden></div>
 
 <footer>
-  Research &amp; decision-support only — not financial advice, not a broker. Probabilities
-  and P&amp;L shown here are deterministic sample outputs; the calibrated engine arrives in Phase 4.
-  You execute every trade yourself.
+  Research &amp; decision-support only — not financial advice, not a broker. Probabilities come from the
+  calibrated quant engine; risk, sizing and P&amp;L are deterministic. SAMPLE data. You execute every trade.
 </footer>
 
 <script>
 const $ = s => document.querySelector(s);
 const pct = x => (x*100).toFixed(2) + '%';
-const signCls = x => x > 0 ? 'up' : (x < 0 ? 'down' : 'dim');
+const money = x => Number(x).toLocaleString(undefined,{maximumFractionDigits:0});
+const cls = x => x>0?'up':(x<0?'down':'dim');
+const state = { recs:{}, vetoed:{}, selected:null, instruments:[] };
 
-async function load(){
-  const status = $('#status'); status.textContent = 'scanning…';
-  const limit = encodeURIComponent($('#limit').value || 5);
-  const asof = $('#asof').value.trim();
-  const url = '/opportunities/top?limit=' + limit + (asof ? '&as_of=' + encodeURIComponent(asof) : '');
-  try{
-    const [h, r] = await Promise.all([fetch('/health').then(x=>x.json()), fetch(url).then(x=>x.json())]);
-    $('#session').textContent = 'session ' + (h.last_session || '—');
-    render(r); status.textContent = '';
-  }catch(e){ status.innerHTML = '<span class="err">error: ' + e + '</span>'; }
+async function boot(){
+  const [h, instr, recs] = await Promise.all([
+    fetch('/health').then(r=>r.json()),
+    fetch('/instruments').then(r=>r.json()),
+    fetch('/recommendations').then(r=>r.json()),
+  ]);
+  $('#session').textContent = 'as_of ' + h.as_of;
+  state.instruments = instr.instruments;
+  for(const r of recs.recommendations) state.recs[r.instrument_id] = r;
+  for(const v of recs.vetoed) state.vetoed[v.instrument_id] = v;
+  renderWatchlist();
+  const first = recs.recommendations[0]?.instrument_id || state.instruments[0]?.instrument_id;
+  if(first) select(first);
+  loadPortfolio(); loadPerformance(); loadAlerts();
 }
 
-function render(r){
-  const banner = $('#banner'), table = $('#table'), rows = $('#rows');
-  rows.innerHTML = '';
-  if(r.action === 'NO_TRADE' || !r.opportunities || r.opportunities.length === 0){
-    banner.hidden = false; table.hidden = true;
-    banner.className = 'banner notrade';
-    banner.textContent = 'NO_TRADE — nothing cleared the gates as of ' + r.as_of + '.';
-    return;
-  }
-  banner.hidden = true; table.hidden = false;
-  for(const o of r.opportunities){
-    const entry = o.last_close, stop = entry*(1-o.stop_pct), target = entry*(1+o.target_pct);
-    const tr = document.createElement('tr');
-    tr.innerHTML =
-      `<td><span class="badge buy">BUY</span></td>`+
-      `<td><b>${o.instrument_id}</b></td>`+
-      `<td class="num">${entry?.toFixed(2) ?? '—'}</td>`+
-      `<td class="num">${o.score.toFixed(3)}</td>`+
-      `<td class="num ${signCls(o.momentum)}">${pct(o.momentum)}</td>`+
-      `<td class="num">${o.volume_ratio.toFixed(1)}×</td>`+
-      `<td class="num dim">${Number(o.avg_turnover).toLocaleString()}</td>`+
-      `<td class="num">${o.rs_percentile.toFixed(2)}</td>`+
-      `<td class="num dim">next open</td>`+
-      `<td class="num down">${stop.toFixed(2)}</td>`+
-      `<td class="num up">${target.toFixed(2)}</td>`+
-      `<td class="num">${o.horizon_sessions}d</td>`+
-      `<td class="reason">${o.reason}</td>`;
-    rows.appendChild(tr);
+function renderWatchlist(){
+  const wl = $('#watchlist'); wl.innerHTML='';
+  for(const i of state.instruments){
+    const rec = state.recs[i.instrument_id], veto = state.vetoed[i.instrument_id];
+    const dot = rec ? 'buy' : (veto ? 'veto' : 'none');
+    const row = document.createElement('div');
+    row.className = 'row' + (i.instrument_id===state.selected?' sel':'');
+    row.innerHTML = `<span class="dot ${dot}"></span><span class="sym">${i.symbol}</span>`+
+      (rec?`<span class="num up">${(rec.calibrated_probability*100).toFixed(0)}%</span>`:
+       (veto?`<span class="num down">VETO</span>`:`<span class="dim">·</span>`));
+    row.onclick = ()=>select(i.instrument_id);
+    wl.appendChild(row);
   }
 }
 
-$('#refresh').addEventListener('click', load);
-load();
+async function select(tkr){
+  state.selected = tkr; renderWatchlist();
+  const [b, ev] = await Promise.all([
+    fetch('/bars/'+tkr).then(r=>r.json()),
+    fetch('/evidence/'+tkr).then(r=>r.json()),
+  ]);
+  drawChart(tkr, b.bars);
+  renderRec(tkr);
+  renderRisk(tkr);
+  renderEvidence(ev.evidence);
+}
+
+function drawChart(tkr, bars){
+  $('#chart-sym').textContent = tkr;
+  if(!bars.length){ $('#chart').innerHTML=''; return; }
+  const last = bars[bars.length-1], first = bars[0];
+  const chg = last.close/first.close - 1;
+  $('#chart-px').textContent = last.close.toFixed(2);
+  $('#chart-chg').innerHTML = `<span class="${cls(chg)}">${chg>=0?'+':''}${pct(chg)}</span>`;
+  $('#chart-chg').className = 'num';
+
+  const W=760, H=300, padL=6, padR=6, priceH=210, volTop=240, volH=54;
+  const hi=Math.max(...bars.map(b=>b.high)), lo=Math.min(...bars.map(b=>b.low));
+  const maxV=Math.max(...bars.map(b=>b.volume));
+  const n=bars.length, bw=(W-padL-padR)/n;
+  const y=p=>10+(1-(p-lo)/((hi-lo)||1))*priceH;
+  const vy=v=>volTop+(1-v/(maxV||1))*volH;
+  let s=`<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">`;
+  // grid lines
+  for(let g=0;g<=4;g++){const gy=10+priceH*g/4; s+=`<line x1="0" y1="${gy}" x2="${W}" y2="${gy}" stroke="var(--grid)" stroke-width="1"/>`;}
+  bars.forEach((b,i)=>{
+    const cx=padL+i*bw+bw/2, up=b.close>=b.open, col=up?'var(--up)':'var(--down)';
+    s+=`<line x1="${cx.toFixed(1)}" y1="${y(b.high).toFixed(1)}" x2="${cx.toFixed(1)}" y2="${y(b.low).toFixed(1)}" stroke="${col}" stroke-width="1"/>`;
+    const yo=y(b.open), yc=y(b.close), top=Math.min(yo,yc), bh=Math.max(1,Math.abs(yc-yo));
+    s+=`<rect x="${(cx-bw*0.32).toFixed(1)}" y="${top.toFixed(1)}" width="${(bw*0.64).toFixed(1)}" height="${bh.toFixed(1)}" fill="${col}"/>`;
+    s+=`<rect x="${(cx-bw*0.32).toFixed(1)}" y="${vy(b.volume).toFixed(1)}" width="${(bw*0.64).toFixed(1)}" height="${(volTop+volH-vy(b.volume)).toFixed(1)}" fill="${up?'var(--up-dim)':'var(--down-dim)'}"/>`;
+  });
+  // rec overlays: target/stop lines
+  const rec=state.recs[tkr];
+  if(rec){
+    for(const [p,c,lab] of [[rec.target,'var(--up)','TGT'],[rec.invalidation,'var(--down)','STOP'],[rec.entry_high,'var(--text-dim)','ENTRY']]){
+      if(p>=lo&&p<=hi){const ly=y(p); s+=`<line x1="0" y1="${ly.toFixed(1)}" x2="${W}" y2="${ly.toFixed(1)}" stroke="${c}" stroke-dasharray="3 3" stroke-width="1"/>`+
+        `<text x="${W-30}" y="${(ly-2).toFixed(1)}" fill="${c}" font-size="9" font-family="monospace">${lab}</text>`;}
+    }
+  }
+  s+='</svg>';
+  $('#chart').innerHTML=s;
+}
+
+function renderRec(tkr){
+  const rec = state.recs[tkr], veto = state.vetoed[tkr], box=$('#rec');
+  if(veto){ box.innerHTML=`<div class="veto-note">RISK VETO — ${veto.flags.join(', ')}. Not an actionable recommendation.</div>`; return; }
+  if(!rec){ box.innerHTML='<div class="dim body">NO_TRADE for this ticker — nothing cleared the gates.</div>'; return; }
+  const g=(k,v)=>`<div><div class="k">${k}</div><div class="v">${v}</div></div>`;
+  box.innerHTML =
+    `<div class="top"><span class="badge buy">BUY</span><b class="num">${tkr}</b>`+
+    `<span class="badge pass">RISK ${rec.risk_verdict}</span>`+
+    `<span class="dim">${rec.complete?'complete':'INCOMPLETE'}</span></div>`+
+    `<div class="grid">`+
+      g('Entry', `${rec.entry_low}–${rec.entry_high}`)+
+      g('Target', `<span class="up">${rec.target}</span>`)+
+      g('Invalidation', `<span class="down">${rec.invalidation}</span>`)+
+      g('Horizon', `${rec.max_holding_sessions}d`)+
+      g('Calibrated P', `${(rec.calibrated_probability*100).toFixed(1)}%`)+
+      g('Exp. net', `<span class="${cls(rec.expected_net_return)}">${pct(rec.expected_net_return)}</span>`)+
+      g('Risk/Reward', `${rec.risk_reward.toFixed(1)}:1`)+
+      g('Downside', `<span class="down">${pct(rec.expected_downside)}</span>`)+
+      g('Quantity', rec.quantity)+
+      g('Allocation', '₹'+money(rec.allocation))+
+      g('Hist. sample', rec.historical_sample_size)+
+      g('Model', rec.model_version)+
+    `</div>`+
+    `<div style="margin-top:10px"><div class="k">Thesis</div><div class="muted">${rec.thesis}</div></div>`+
+    `<div style="margin-top:6px"><div class="k">What invalidates</div><div class="muted">Close at/through ${rec.invalidation}, or the catalyst is retracted.</div></div>`;
+}
+
+function renderRisk(tkr){
+  const rec = state.recs[tkr], veto = state.vetoed[tkr], box=$('#risk');
+  if(veto){ box.innerHTML=`<span class="badge veto">VETO</span> <span class="down num">${veto.flags.join(', ')}</span>`; return; }
+  if(!rec){ box.textContent='—'; return; }
+  const flags = rec.risk_flags.length? rec.risk_flags.join(', ') : 'no flags';
+  box.innerHTML = `<span class="badge pass">${rec.risk_verdict}</span> <span class="dim num">${flags}</span>`+
+    `<div class="dim" style="margin-top:6px;font-size:11px">Independent engine · holds veto over the Judge.</div>`;
+}
+
+function renderEvidence(docs){
+  const box=$('#evidence');
+  if(!docs.length){ box.innerHTML='<div class="body dim">No evidence.</div>'; return; }
+  box.innerHTML = docs.map(d=>
+    `<div class="ev"><div class="h"><span class="tier">TIER ${d.tier}</span>`+
+    `<span class="muted num">${d.source}</span><span class="spacer"></span>`+
+    `<span class="dim num">${d.published_at}</span></div>`+
+    `<div class="txt">${d.text}</div><div class="id">${d.id}</div></div>`).join('');
+}
+
+/* ---- tabs ---- */
+$('#tabs').addEventListener('click', e=>{
+  const t=e.target.dataset.tab; if(!t) return;
+  for(const b of $('#tabs').children) b.classList.toggle('active', b.dataset.tab===t);
+  for(const p of ['portfolio','performance','alerts','chat'])
+    $('#tab-'+p).hidden = (p!==t);
+});
+
+async function loadPortfolio(){
+  const p = await fetch('/portfolio').then(r=>r.json());
+  $('#navtag').textContent = 'NAV ₹'+money(p.nav);
+  const holds = p.holdings.map(h=>`<tr><td>${h.instrument_id}</td><td class="num">${h.quantity}</td>`+
+    `<td class="num">${h.avg_cost}</td><td class="num">${h.last_price.toFixed(2)}</td>`+
+    `<td class="num">₹${money(h.market_value)}</td><td class="dim">${h.sector}</td></tr>`).join('');
+  const moves = p.moves.map(m=>`<span class="move ${m.action}">${m.action} ${m.instrument_id}`+
+    (m.from_instrument?` ⟵ ${m.from_instrument}`:'')+`</span>`).join(' ');
+  $('#tab-portfolio').innerHTML =
+    `<div class="metrics">`+
+    `<div class="metric"><div class="k">NAV</div><div class="v">₹${money(p.nav)}</div></div>`+
+    `<div class="metric"><div class="k">Cash</div><div class="v">₹${money(p.cash)}</div></div>`+
+    `<div class="metric"><div class="k">Invested</div><div class="v">₹${money(p.invested)}</div></div>`+
+    `<div class="metric"><div class="k">Positions</div><div class="v">${p.holdings.length}</div></div></div>`+
+    `<table><thead><tr><th>Ticker</th><th>Qty</th><th>Avg</th><th>Last</th><th>Value</th><th>Sector</th></tr></thead>`+
+    `<tbody>${holds}</tbody></table>`+
+    `<div style="margin-top:12px"><div class="k dim" style="text-transform:uppercase;font-size:10px">Rotation proposal</div>`+
+    `<div style="margin-top:6px">${moves}</div></div>`;
+}
+
+async function loadPerformance(){
+  const p = await fetch('/performance').then(r=>r.json());
+  const m=(k,v)=>`<div class="metric"><div class="k">${k}</div><div class="v">${v}</div></div>`;
+  const pf = p.profit_factor==null? '∞' : p.profit_factor.toFixed(2);
+  // equity sparkline
+  const c=p.equity_curve||[], W=600,H=70, xs=c.length>1?W/(c.length-1):W;
+  const navs=c.map(x=>x.nav), mn=Math.min(...navs), mx=Math.max(...navs);
+  const pts=c.map((x,i)=>`${(i*xs).toFixed(1)},${(H-(x.nav-mn)/((mx-mn)||1)*H).toFixed(1)}`).join(' ');
+  const up=(navs[navs.length-1]||0)>=navs[0];
+  const spark=`<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="border:1px solid var(--border-soft);background:var(--panel-2)">`+
+    `<polyline points="${pts}" fill="none" stroke="${up?'var(--up)':'var(--down)'}" stroke-width="1.5"/></svg>`;
+  const buckets = (p.buckets||[]).map(b=>`<tr><td>${(b.lo*100).toFixed(0)}–${(b.hi*100).toFixed(0)}%</td>`+
+    `<td class="num">${(b.precision*100).toFixed(0)}%</td><td class="num dim">${b.count}</td></tr>`).join('')
+    || `<tr><td colspan="3" class="dim">not enough samples</td></tr>`;
+  $('#tab-performance').innerHTML =
+    `<div class="metrics">`+
+    m('Trades', p.n)+ m('Win rate', (p.win_rate*100).toFixed(0)+'%')+
+    m('Net return', `<span class="${cls(p.total_return)}">${pct(p.total_return)}</span>`)+
+    m('Max DD', `<span class="down">${pct(p.max_drawdown)}</span>`)+
+    m('Profit factor', pf)+ m('Sharpe', p.sharpe.toFixed(2))+
+    m('Sortino', p.sortino.toFixed(2))+ m('NAV', '₹'+money(p.nav))+`</div>`+
+    `<div class="k dim" style="text-transform:uppercase;font-size:10px;margin-bottom:4px">Paper equity curve</div>${spark}`+
+    `<div style="margin-top:12px"><div class="k dim" style="text-transform:uppercase;font-size:10px">Precision by confidence</div>`+
+    `<table style="margin-top:4px"><thead><tr><th>Band</th><th>Precision</th><th>N</th></tr></thead><tbody>${buckets}</tbody></table></div>`+
+    `<div class="dim" style="margin-top:8px;font-size:11px">Out-of-sample paper track on sample data. Losses reported honestly.</div>`;
+}
+
+async function loadAlerts(){
+  const a = await fetch('/alerts').then(r=>r.json());
+  $('#tab-alerts').innerHTML = a.alerts.length ? a.alerts.map(x=>
+    `<div class="alert"><span class="sev ${x.severity}">${x.severity}</span>`+
+    `<b class="num">${x.instrument_id}</b><span class="muted">${x.message}</span>`+
+    `<span class="spacer"></span><span class="dim num">${(x.type||'').replace('_',' ')}</span></div>`).join('')
+    : '<div class="dim">No alerts.</div>';
+}
+
+/* ---- chat ---- */
+function chatSend(){
+  const inp=$('#chatq'), q=inp.value.trim(); if(!q) return;
+  addMsg('you', q); inp.value='';
+  fetch('/chat',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({question:q, instrument_id:state.selected})})
+    .then(r=>r.json()).then(res=>{
+      const cite = (res.citations||[]).join(', ');
+      addMsg(res.grounded?'ai':'ai refuse', res.answer, cite);
+    }).catch(e=>addMsg('ai refuse','error: '+e));
+}
+function addMsg(kind, text, cite){
+  const log=$('#chatlog');
+  const d=document.createElement('div'); d.className='msg '+kind;
+  d.innerHTML = text + (cite?`<div class="cite">cited: ${cite}</div>`:'');
+  log.appendChild(d); log.scrollTop=log.scrollHeight;
+}
+$('#tab-chat').innerHTML =
+  `<div class="chatlog" id="chatlog"><div class="msg ai">Ask about a selected ticker's evidence. I answer only from stored, timestamped sources — or I refuse.</div></div>`+
+  `<div class="chatbar"><input id="chatq" placeholder="e.g. what is the catalyst for MOMO?" />`+
+  `<button class="act" id="chatsend">SEND</button></div>`;
+$('#chatsend').addEventListener('click', chatSend);
+$('#chatq').addEventListener('keydown', e=>{ if(e.key==='Enter') chatSend(); });
+
+boot();
 </script>
 </body>
 </html>
