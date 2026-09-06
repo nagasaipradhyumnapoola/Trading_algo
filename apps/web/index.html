@@ -166,6 +166,10 @@
       <h3>Evidence</h3>
       <div id="evidence"><div class="body dim">—</div></div>
     </div>
+    <div class="panel">
+      <h3>AI Research Floor</h3>
+      <div id="floor"><div class="body dim">—</div></div>
+    </div>
   </div>
 </div>
 
@@ -282,6 +286,25 @@ async function select(tkr){
   renderRec(tkr);
   renderRisk(tkr);
   renderEvidence(ev.evidence);
+  $('#floor').innerHTML = '<div class="body dim">running floor…</div>';
+  fetch('/floor/' + tkr).then(r=>r.json()).then(f=>renderFloor(f.floor)).catch(()=>{});
+}
+
+function renderFloor(floor){
+  const box = $('#floor');
+  if(!floor || floor.available === false){ box.innerHTML = '<div class="body dim">insufficient history</div>'; return; }
+  const line = (k, r) => `<div class="ev"><div class="h"><span class="muted num">${k}</span>`+
+    (r && r.confidence ? `<span class="spacer"></span><span class="dim num">${(r.confidence*100).toFixed(0)}%</span>` : '')+
+    `</div><div class="txt">${(r && r.thesis) || '—'}</div></div>`;
+  const j = (floor.judge && floor.judge.data && floor.judge.data.action) || '—';
+  const jcls = j==='BUY'?'buy':(j==='SELL'?'sell':'hold');
+  box.innerHTML =
+    line('News', floor.news) + line('Market', floor.market) + line('Fundamental', floor.fundamental) +
+    line('Sentiment', floor.sentiment) + line('Historical', floor.historical) +
+    `<div class="ev"><div class="h"><span class="up">🐂 Bull</span></div><div class="txt">${(floor.bull&&floor.bull.thesis)||'—'}</div></div>`+
+    `<div class="ev"><div class="h"><span class="down">🐻 Bear</span></div><div class="txt">${(floor.bear&&floor.bear.thesis)||'—'}</div></div>`+
+    `<div class="ev"><div class="h"><span class="muted">⚖️ Judge</span><span class="spacer"></span>`+
+    `<span class="badge ${jcls}">${j}</span></div><div class="txt">${(floor.judge&&floor.judge.thesis)||'—'}</div></div>`;
 }
 
 function drawChart(tkr, bars){

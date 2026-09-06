@@ -116,3 +116,13 @@ def test_providers_report():
     assert rep["app_mode"] == "demo"
     assert rep["market_data"]["configured"] == "sample" and rep["market_data"]["available"]
     assert "news" in rep and "filings" in rep
+
+
+def test_floor_returns_all_nine_roles():
+    recs = client.get("/recommendations").json()["recommendations"]
+    tkr = recs[0]["instrument_id"]
+    f = client.get(f"/floor/{tkr}").json()["floor"]
+    assert {"news", "market", "fundamental", "sentiment",
+            "historical", "bull", "bear", "judge"} <= set(f)
+    assert f["judge"]["data"]["action"] in ("BUY", "SELL", "HOLD", "ROTATE", "NO_TRADE")
+    assert f["bull"]["thesis"] and f["bear"]["thesis"]

@@ -173,6 +173,13 @@ async def evidence(instrument_id: str) -> dict[str, object]:
             "evidence": get_terminal().evidence(instrument_id)}
 
 
+@app.get("/floor/{instrument_id}")
+async def floor(instrument_id: str) -> dict[str, object]:
+    """The 9-agent research floor output for one instrument (News..Judge)."""
+    return {"data_mode": SETTINGS.data_mode, "instrument_id": instrument_id,
+            "floor": await get_terminal().floor_for(instrument_id)}
+
+
 class ChatRequest(BaseModel):
     question: str
     instrument_id: str | None = None

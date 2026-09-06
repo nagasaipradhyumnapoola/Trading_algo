@@ -42,12 +42,14 @@ from services.quant import ScanConfig, compute_features, scan
 from services.quant.calibration import IsotonicCalibrator
 from services.quant.ml import DEFAULT_FEATURES, LogisticModel
 from services.research_workers.chat import GroundedChat
+from services.research_workers.floor import ResearchFloor
 from services.research_workers.llm_gateway import (
     DataClass,
     LLMGateway,
     MockProvider,
     ModelCapabilityRegistry,
     ModelRoute,
+    build_real_registry,
 )
 from services.research_workers.llm_gateway.policies import MID
 from services.risk_portfolio import (
@@ -71,6 +73,21 @@ def _chat_responder(call: dict) -> str:
     return json.dumps({"answer": f"Based on {sid}: {snippet}", "citations": [sid]})
 
 
+def _floor_responder(call: dict) -> str:
+    """Mock FreeLLMAPI response valid across every floor task, grounded to the source id."""
+    sid = (re.search(r'id="([^"]+)"', call["user"]) or [None, "doc"])[1]
+    return json.dumps({
+        "sentiment": 0.55, "label": "positive", "rationale": "constructive flow",
+        "manipulation_flags": [], "thesis": "Grounded catalyst; momentum + volume support.",
+        "assumptions": ["order executes on schedule"], "action": "BUY",
+        "unknowns": ["contract margin not disclosed"],
+        "event_candidates": [{"type": "contract_order", "materiality": 0.8, "novelty": 0.7}],
+        "claims": [{"claim": "Government order awarded", "polarity": "positive",
+                    "evidence_ids": [sid], "confidence": 0.8}],
+        "citations": [sid],
+    })
+
+
 class TerminalService:
     def __init__(self) -> None:
         # Demo runs through the SAME provider interface a real feed will implement.
@@ -85,6 +102,7 @@ class TerminalService:
         self._chat_setup()
         self._observability()
         self._logbook_setup()
+        self._floor_setup()
 
     # -- build steps -----------------------------------------------------------
 
@@ -288,7 +306,30 @@ class TerminalService:
                                       severity=a["severity"], channel="in_app", delivered=True,
                                       message=a["message"])
 
+    def _floor_setup(self) -> None:
+        gw = LLMGateway(MockProvider(_floor_responder), build_real_registry())
+        self._floor = ResearchFloor(gw, self.repo, [i.instrument_id for i in self.master])
+        self._floor_cache: dict[str, dict] = {}
+
     # -- API surface -----------------------------------------------------------
+
+    async def floor_for(self, instrument_id: str) -> dict:
+        """Run the 9-agent floor for one instrument (cached). Async: endpoints await it."""
+        if instrument_id in self._floor_cache:
+            return self._floor_cache[instrument_id]
+        bars = self.repo.as_of(instrument_id, Timeframe.EOD, self.current_as_of)
+        if not bars:
+            return {"available": False}
+        features = compute_features(bars, self.current_as_of)
+        evidence = self.evidence_by_id.get(instrument_id) or [
+            {"id": f"nse_{instrument_id}",
+             "text": f"NSE filing ({self.current_as_of}): {instrument_id} catalyst noted."}]
+        res = await self._floor.investigate(instrument_id, self.current_as_of, features, evidence)
+        out = {a: {"agent": r.agent, "thesis": r.thesis, "confidence": round(r.confidence, 3),
+                   "evidence": [e.source for e in r.evidence], "data": r.data}
+               for a, r in res.items()}
+        self._floor_cache[instrument_id] = out
+        return out
 
     def logbook_day(self, as_of: str | None = None) -> dict:
         d = date.fromisoformat(as_of) if as_of else self.current_as_of
