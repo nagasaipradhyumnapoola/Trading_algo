@@ -19,9 +19,11 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from services.config import load_settings                                        # noqa: E402
-from services.research_workers.llm_gateway import (                             # noqa: E402
-    LLMTask, build_real_gateway, health_check,
+from services.config import load_settings  # noqa: E402
+from services.research_workers.llm_gateway import (  # noqa: E402
+    LLMTask,
+    build_real_gateway,
+    health_check,
 )
 
 SOURCES = [{"id": "nse_demo", "text":

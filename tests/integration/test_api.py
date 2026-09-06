@@ -109,3 +109,10 @@ def test_user_execution_is_recorded():
     r = client.post("/logbook/execution",
                     json={"instrument_id": "MOMO", "side": "BUY", "quantity": 10, "price": 174.4})
     assert r.status_code == 200 and r.json()["recorded"] is True
+
+
+def test_providers_report():
+    rep = client.get("/providers").json()
+    assert rep["app_mode"] == "demo"
+    assert rep["market_data"]["configured"] == "sample" and rep["market_data"]["available"]
+    assert "news" in rep and "filings" in rep

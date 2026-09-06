@@ -22,6 +22,7 @@ from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 
 from services.config import AppMode, get_settings
+from services.providers import provider_report
 
 from .terminal import TerminalService
 
@@ -85,6 +86,12 @@ async def health() -> dict[str, object]:
 async def config_report() -> dict[str, object]:
     """Presence-only configuration report — never exposes secret values."""
     return SETTINGS.startup_report()
+
+
+@app.get("/providers")
+async def providers() -> dict[str, object]:
+    """Which market-data / news / filings providers are configured + registered."""
+    return provider_report(SETTINGS)
 
 
 @app.get("/instruments")

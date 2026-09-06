@@ -70,7 +70,7 @@ degraded mode) — all real and tested, just never connected to a real provider 
 | Data-quality suite | ✅ TESTED | `quality.py`, `test_quality.py` | Quarantine logic present; run on synthetic | Wire to real feeds + freshness/staleness gates |
 | Raw document store | ✅ TESTED | `document_store.py`, `test_document_store.py` | Content-hash + provenance; JSONL/in-memory, not DB | DB/object-store persistence |
 | Parquet store | ✅ TESTED | `parquet_store.py`, `test_persistence.py` | Research persistence works | Wire into pipeline |
-| Filings / news / web adapters | ⛔ UNIMPLEMENTED | no HTTP client anywhere | No NSE/BSE filings, news, or web-search adapters | Licensed/permitted provider adapters + rights metadata |
+| Provider interfaces (market/news/filings) | 🟡 SAMPLE-ONLY (Step 3) | `services/providers/*`, `/providers`, `test_providers.py` | Provider-agnostic Protocols + config-driven selection + sample impls + provider→quant bridge (`load_market_data`); real mode fails fast (`NotConfigured`) on an unregistered provider. The demo terminal now consumes the interface | Implement + register the real NSE/BSE feed, news, filings adapters (needs provider choice + key) |
 
 ### A3. Quant & ML
 
@@ -196,7 +196,8 @@ installs cleanly. See [`DEVELOPMENT.md`](DEVELOPMENT.md).
 | B — persistence + migrations | `d53ee0e` | SQLAlchemy models for all 13 append-only record tables, append-only repositories, Alembic baseline migration; tested on SQLite (167 tests) | A6 DB logbook ⛔→🟡 |
 | 1 — Python 3.12 baseline | `bd3e5dc` | Pinned 3.12 (`.python-version`), `uv.lock`, core/extras split, mypy config, `DEVELOPMENT.md`; 167 tests + ruff pass on 3.12 | Section D resolved |
 | 2 — daily logbook | `40261b4` | `LogbookService` writes the day (recs/decisions/vetoes/fills/alerts/plan/portfolio) to the append-only tables; `/logbook` + Logbook UI tab; recommendation reconstruction verified in-browser; 173 tests | A6 logbook wired (demo); gate 8 improved |
-| 3 — real FreeLLMAPI adapter | _(this commit)_ | `FreeLLMProvider` + `build_real_gateway` to the real FreeLLMAPI wire format; `scripts/freellm_smoke.py` for live verification; fixed an inverted data-classification route gate exposed by the real routes; 179 tests | A4 provider ⛔→🟡 |
+| 3 — real FreeLLMAPI adapter | `5ddd1a8` | `FreeLLMProvider` + `build_real_gateway` to the real FreeLLMAPI wire format; `scripts/freellm_smoke.py` for live verification; fixed an inverted data-classification route gate exposed by the real routes; 179 tests | A4 provider ⛔→🟡 |
+| 3 — provider-agnostic interfaces | _(this commit)_ | `services/providers` Protocols (market/news/filings) + config-driven selection + sample impls + provider→quant bridge + `/providers`; real mode fails fast on unconfigured provider; demo terminal now uses the interface; 187 tests | A2 data adapters ⛔→🟡 |
 
 **Still blocking real use:** API auth, real feeds + real FreeLLMAPI adapter, 7/9
 agents, intraday, pipeline→DB wiring, and gates 1–9. Runtime for DB work is SQLite

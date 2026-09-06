@@ -25,7 +25,7 @@ from services.evaluation import (
     precision_by_bucket,
 )
 from services.ingestion.models import Timeframe
-from services.ingestion.sample import SAMPLE_START, build_sample_universe
+from services.ingestion.sample import SAMPLE_START
 from services.monitoring import (
     Feedback,
     FeedbackLabel,
@@ -37,6 +37,7 @@ from services.monitoring import (
     evaluate_health,
 )
 from services.persistence import LogbookService, init_db, make_engine
+from services.providers import SampleMarketDataProvider, load_market_data
 from services.quant import ScanConfig, compute_features, scan
 from services.quant.calibration import IsotonicCalibrator
 from services.quant.ml import DEFAULT_FEATURES, LogisticModel
@@ -72,7 +73,10 @@ def _chat_responder(call: dict) -> str:
 
 class TerminalService:
     def __init__(self) -> None:
-        self.repo, self.master, self.last = build_sample_universe(n=_N)
+        # Demo runs through the SAME provider interface a real feed will implement.
+        provider = SampleMarketDataProvider(n=_N)
+        self.repo, self.master = load_market_data(provider)
+        self.last = SAMPLE_START + timedelta(days=_N - 1)
         self._train()
         self._paper_track()
         self._current_recs()
