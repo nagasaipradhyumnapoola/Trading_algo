@@ -48,13 +48,13 @@ degraded mode) — all real and tested, just never connected to a real provider 
 
 | Component | Status | Evidence | Gap for real use | Production gate |
 |---|---|---|---|---|
-| Settings / env loading | ⛔ UNIMPLEMENTED | grep: no `os.environ`/`BaseSettings`/`getenv` anywhere | Nothing reads `.env`; no `APP_MODE`; no typed validation | Typed `Settings` (pydantic-settings), fail-fast on missing real-mode config, startup report |
-| `.env.example` | ⚠️ UNSAFE | `.env.example:14,22` fake URL + default DB creds | Fake `https://api.freellm.example/v1`, `replace_me`, embedded creds where real values go | Blank-value contract, no fake URLs/creds |
-| `APP_MODE` demo/real split | ⛔ UNIMPLEMENTED | — | No mode switch; demo path is the only path | `APP_MODE=real` fails fast without feeds/DB; `demo` gated |
-| DEMO/REAL indicator | ⛔ UNIMPLEMENTED | API responses lack a data-mode flag (`apps/api/app/main.py`) | UI shows a static "SAMPLE DATA" tag only | Every API response + UI page carries `data_mode` |
+| Settings / env loading | ✅ TESTED (Phase A) | `services/config/settings.py`, `test_config.py` | Typed Settings + validation + presence-only startup report | Provide real feed/DB values |
+| `.env.example` | ✅ TESTED (Phase A) | `.env.example` | Blank-value contract, no fake URLs/creds | — |
+| `APP_MODE` demo/real split | ✅ TESTED (Phase A) | `settings.py` `_enforce_mode`, `test_config.py` | Real mode fails fast without feeds/DB | — |
+| DEMO/REAL indicator | ✅ TESTED (Phase A) | `apps/api/app/main.py` X-Data-Mode + `data_mode`; UI tag | Present on every response + UI | — |
 | API authentication / RBAC | ⛔ UNIMPLEMENTED | grep: no `Depends`/`api_key`/`Authorization` in `apps/api/app` | Open, unauthenticated endpoints | Auth on all non-public routes; RBAC if multi-user |
-| Import-time side effects | ⚠️ UNSAFE | `apps/api/app/main.py:27` `_TERMINAL = TerminalService()` | Trains a model + fabricates recs on import; not injectable | Dependency injection; no training/fabrication at import |
-| Secret handling | ⚠️ UNSAFE | no secrets manager; keys would sit in `.env` only | Acceptable for local, not for deployment | Secrets manager + startup report that never prints secrets |
+| Import-time side effects | ✅ TESTED (Phase A) | `apps/api/app/main.py` lazy `get_terminal()` | Demo-only lazy build; real mode 503, no fabrication at import | — |
+| Secret handling | 🟡 SAMPLE-ONLY | `startup_report()` presence-only | Keys in `.env`; no secrets manager | Secrets manager in deployment |
 
 ### A2. Data ingestion & evidence
 
@@ -130,7 +130,7 @@ degraded mode) — all real and tested, just never connected to a real provider 
 | Drift (PSI) | ✅ TESTED | `drift.py` | Correct | Wire reference vs live |
 | Audit export | ✅ TESTED | `audit.py`, `test_hardening.py` | Reconstructable bundle | Pull from DB |
 | Feedback store | ✅ TESTED | `feedback.py` | Separate from outcomes | DB-backed |
-| Immutable DB logbook | ⛔ UNIMPLEMENTED | no DB tables | No `decision_log`/`user_execution_log`/daily plan tables | Postgres tables + migrations + Logbook tab |
+| Immutable DB logbook | 🟡 SAMPLE-ONLY (Phase B) | `services/persistence/*`, `migrations/`, `test_persistence_db.py` | All 13 record tables + append-only repos + Alembic migration, tested on SQLite; NOT yet wired into the pipeline or Postgres-deployed | Wire pipeline writes; Postgres; Logbook UI tab |
 
 ---
 
@@ -184,6 +184,20 @@ Local runtime is **Python 3.14.4**, on which `duckdb`, `sqlalchemy`, `lightgbm`,
 directive requires standardizing on **Python 3.12** (or another fully supported
 version). CI already targets 3.12 (`.github/workflows/ci.yml`); local dev must match
 before DB/LightGBM work begins.
+
+---
+
+## E. Upgrade progress log
+
+| Phase | Commit | What changed | Audit items moved |
+|---|---|---|---|
+| Audit | `4187917` | This document + README honesty banner | — |
+| A — config contract | `08dda3b` | Typed `Settings`, `APP_MODE` demo/real, fail-fast, `.env.example` blank contract, DEMO/REAL indicator, removed import-time terminal build | A1 config rows ⛔→✅ |
+| B — persistence + migrations | _(this commit)_ | SQLAlchemy models for all 13 append-only record tables, append-only repositories, Alembic baseline migration; tested on SQLite (167 tests) | A6 DB logbook ⛔→🟡 |
+
+**Still blocking real use:** API auth, real feeds + real FreeLLMAPI adapter, 7/9
+agents, intraday, pipeline→DB wiring, and gates 1–9. Runtime for DB work is SQLite
+locally / Postgres in deployment (SQLAlchemy 2.0 + Alembic verified on 3.14).
 
 ---
 
