@@ -9,8 +9,14 @@ An agentic, market-wide opportunity-discovery and quant decision-support engine 
 
 `DISCOVER → RESEARCH → DEBATE → QUANTIFY → RISK-CHECK → RANK → RECOMMEND → OBSERVE → LEARN`
 
-![Status](https://img.shields.io/badge/status-MVP%20complete%20·%20sample%20data-16c784)
+![Status](https://img.shields.io/badge/status-prototype%20·%20sample%20data%20·%20NOT%20for%20real%20use-ea3943)
 ![CI](https://github.com/nagasaipradhyumnapoola/Trading_algo/actions/workflows/ci.yml/badge.svg)
+
+> ⚠️ **Read first: [`docs/PRODUCTION_READINESS_AUDIT.md`](docs/PRODUCTION_READINESS_AUDIT.md).**
+> The phase checkmarks below mean "core logic built and tested **on synthetic data with a
+> mock LLM**" — not production-ready. There is currently no configuration system, no
+> database, no real data feed, and no real LLM; 7 of 9 agents are unimplemented. Do not
+> rely on this system for investing decisions.
 ![Market](https://img.shields.io/badge/market-NSE%20%2F%20BSE-blue)
 ![Agents](https://img.shields.io/badge/AI%20agents-9-8A2BE2)
 ![LLM](https://img.shields.io/badge/LLM%20access-gateway%20only-6f42c1)
