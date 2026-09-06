@@ -130,7 +130,7 @@ degraded mode) — all real and tested, just never connected to a real provider 
 | Drift (PSI) | ✅ TESTED | `drift.py` | Correct | Wire reference vs live |
 | Audit export | ✅ TESTED | `audit.py`, `test_hardening.py` | Reconstructable bundle | Pull from DB |
 | Feedback store | ✅ TESTED | `feedback.py` | Separate from outcomes | DB-backed |
-| Immutable DB logbook | 🟡 SAMPLE-ONLY (Phase B) | `services/persistence/*`, `migrations/`, `test_persistence_db.py` | All 13 record tables + append-only repos + Alembic migration, tested on SQLite; NOT yet wired into the pipeline or Postgres-deployed | Wire pipeline writes; Postgres; Logbook UI tab |
+| Immutable DB logbook | 🟡 SAMPLE-ONLY (Step 2) | `services/persistence/logbook.py`, `/logbook`, Logbook UI tab, `test_logbook.py` | Terminal writes the day's recs/decisions/vetoes/paper-fills/alerts/plan + portfolio snapshot; `/logbook` reads a day; a recommendation reconstructs end to end (verified in-browser). SQLite/demo (in-memory per process), not Postgres-deployed | Postgres deploy; wire the REAL pipeline; cross-day "what changed" diff |
 
 ---
 
@@ -194,7 +194,8 @@ installs cleanly. See [`DEVELOPMENT.md`](DEVELOPMENT.md).
 | Audit | `4187917` | This document + README honesty banner | — |
 | A — config contract | `08dda3b` | Typed `Settings`, `APP_MODE` demo/real, fail-fast, `.env.example` blank contract, DEMO/REAL indicator, removed import-time terminal build | A1 config rows ⛔→✅ |
 | B — persistence + migrations | `d53ee0e` | SQLAlchemy models for all 13 append-only record tables, append-only repositories, Alembic baseline migration; tested on SQLite (167 tests) | A6 DB logbook ⛔→🟡 |
-| 1 — Python 3.12 baseline | _(this commit)_ | Pinned 3.12 (`.python-version`), `uv.lock`, core/extras split, mypy config, `DEVELOPMENT.md`; 167 tests + ruff pass on 3.12 | Section D resolved |
+| 1 — Python 3.12 baseline | `bd3e5dc` | Pinned 3.12 (`.python-version`), `uv.lock`, core/extras split, mypy config, `DEVELOPMENT.md`; 167 tests + ruff pass on 3.12 | Section D resolved |
+| 2 — daily logbook | _(this commit)_ | `LogbookService` writes the day (recs/decisions/vetoes/fills/alerts/plan/portfolio) to the append-only tables; `/logbook` + Logbook UI tab; recommendation reconstruction verified in-browser; 173 tests | A6 logbook wired (demo); gate 8 improved |
 
 **Still blocking real use:** API auth, real feeds + real FreeLLMAPI adapter, 7/9
 agents, intraday, pipeline→DB wiring, and gates 1–9. Runtime for DB work is SQLite

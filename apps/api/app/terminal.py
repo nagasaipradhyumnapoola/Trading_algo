@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import json
 import re
-from datetime import timedelta
+from datetime import date, timedelta
 
 import numpy as np
 
@@ -36,6 +36,7 @@ from services.monitoring import (
     build_audit_bundle,
     evaluate_health,
 )
+from services.persistence import LogbookService, init_db, make_engine
 from services.quant import ScanConfig, compute_features, scan
 from services.quant.calibration import IsotonicCalibrator
 from services.quant.ml import DEFAULT_FEATURES, LogisticModel
@@ -79,6 +80,7 @@ class TerminalService:
         self._alerts()
         self._chat_setup()
         self._observability()
+        self._logbook_setup()
 
     # -- build steps -----------------------------------------------------------
 
@@ -228,7 +230,76 @@ class TerminalService:
         self.rate = RateLimiter(limit=30, window_s=10.0)
         self.data_snapshot = "sample-seed-7"
 
+    def _logbook_setup(self) -> None:
+        """Persist the day's plan to the append-only logbook (in-memory SQLite in demo)."""
+        engine = make_engine("sqlite://")
+        init_db(engine)
+        self.logbook = LogbookService(engine)
+        as_of = self.current_as_of
+        pd = self.portfolio_data
+
+        self.logbook.record_portfolio_snapshot(
+            as_of=as_of, nav=pd["nav"], cash=pd["cash"], invested=pd["invested"],
+            holdings=[{"instrument_id": h["instrument_id"], "quantity": h["quantity"],
+                       "avg_cost": h["avg_cost"], "last_price": h["last_price"],
+                       "sector": h.get("sector")} for h in pd["holdings"]])
+
+        self.rec_ids: dict[str, str] = {}
+        for r in self.recs:
+            rid = self.logbook.record_recommendation(
+                as_of=date.fromisoformat(r["as_of"]), instrument_id=r["instrument_id"],
+                action=r["action"], entry_low=r["entry_low"], entry_high=r["entry_high"],
+                target=r["target"], invalidation=r["invalidation"],
+                max_holding_sessions=r["max_holding_sessions"], quantity=r["quantity"],
+                allocation=r["allocation"], calibrated_probability=r["calibrated_probability"],
+                expected_net_return=r["expected_net_return"], risk_verdict=r["risk_verdict"],
+                model_version=r["model_version"],
+                expires_on=date.fromisoformat(r["expires_on"]) if r.get("expires_on") else None,
+                horizon_kind="swing",
+                data={"score": r.get("score"), "risk_flags": r.get("risk_flags"),
+                      "evidence_ids": r.get("evidence_ids"), "thesis": r.get("thesis")})
+            r["logbook_id"] = rid
+            self.rec_ids[r["instrument_id"]] = rid
+            self.logbook.record_decision(as_of=as_of, instrument_id=r["instrument_id"],
+                                         decision=r["action"], rationale=r.get("thesis", ""),
+                                         model_version=r["model_version"])
+
+        for v in self.vetoed:
+            self.logbook.record_risk_veto(instrument_id=v["instrument_id"], as_of=as_of,
+                                          verdict=v["risk_verdict"], flags={"codes": v["flags"]})
+
+        self.logbook.record_daily_plan(
+            plan_date=as_of, summary=f"{len(self.recs)} rec, {len(self.vetoed)} veto",
+            changes=[{"instrument_id": m["instrument_id"], "action": m["action"],
+                      "from_instrument": m.get("from_instrument"), "rupees": m.get("rupees", 0),
+                      "reason": m.get("reason", "")} for m in pd["moves"]])
+
+        for f in self.broker.fills:
+            self.logbook.record_paper_fill(
+                instrument_id=f.instrument_id, side=f.side.value, quantity=f.quantity,
+                price=float(f.price), cost=float(f.cost), session_date=f.session_date, kind=f.kind)
+
+        for a in self.alert_rows:
+            self.logbook.record_alert(alert_type=a["type"], instrument_id=a["instrument_id"],
+                                      severity=a["severity"], channel="in_app", delivered=True,
+                                      message=a["message"])
+
     # -- API surface -----------------------------------------------------------
+
+    def logbook_day(self, as_of: str | None = None) -> dict:
+        d = date.fromisoformat(as_of) if as_of else self.current_as_of
+        return self.logbook.day(d)
+
+    def logbook_reconstruct(self, rec_id: str) -> dict:
+        return self.logbook.reconstruct_recommendation(rec_id)
+
+    def record_user_execution(self, *, instrument_id: str, side: str, quantity: int,
+                              price: float, note: str = "") -> dict:
+        from datetime import datetime, timezone
+        rid = self.logbook.record_user_execution(
+            instrument_id=instrument_id, side=side, quantity=quantity, price=price,
+            executed_at=datetime.now(timezone.utc), note=note)
+        return {"recorded": True, "id": rid}
 
     def metrics_snapshot(self) -> dict:
         runs = self._chat.gateway.runs

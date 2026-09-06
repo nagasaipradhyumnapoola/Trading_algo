@@ -128,6 +128,32 @@ async def audit(instrument_id: str) -> dict[str, object]:
     return get_terminal().audit(instrument_id)
 
 
+@app.get("/logbook")
+async def logbook(as_of: str | None = None) -> dict[str, object]:
+    return {"data_mode": SETTINGS.data_mode, **get_terminal().logbook_day(as_of)}
+
+
+@app.get("/logbook/recommendation/{rec_id}")
+async def logbook_recommendation(rec_id: str) -> dict[str, object]:
+    return get_terminal().logbook_reconstruct(rec_id)
+
+
+class ExecutionRequest(BaseModel):
+    instrument_id: str
+    side: str
+    quantity: int
+    price: float
+    note: str = ""
+
+
+@app.post("/logbook/execution")
+async def logbook_execution(req: ExecutionRequest) -> dict[str, object]:
+    """Record a user's manually-executed fill (no broker path)."""
+    return get_terminal().record_user_execution(
+        instrument_id=req.instrument_id, side=req.side, quantity=req.quantity,
+        price=req.price, note=req.note)
+
+
 @app.get("/bars/{instrument_id}")
 async def bars(instrument_id: str, limit: int = Query(60, ge=5, le=200)) -> dict[str, object]:
     return {"data_mode": SETTINGS.data_mode, "instrument_id": instrument_id,

@@ -88,3 +88,24 @@ def test_config_report_is_presence_only():
     assert rep["app_mode"] == "demo" and "config" in rep
     assert rep["broker_write_enabled"] is False
     assert set(rep["config"].values()) <= {"SET", "MISSING"}   # never raw values
+
+
+def test_logbook_day_is_populated():
+    lb = client.get("/logbook").json()
+    assert lb["data_mode"] == "DEMO"
+    assert lb["recommendations"] and lb["plans"]               # the day was logged
+    assert lb["plans"][0]["plan_date"] == lb["as_of"]
+
+
+def test_logbook_reconstructs_a_recommendation():
+    recs = client.get("/recommendations").json()["recommendations"]
+    rid = recs[0]["logbook_id"]
+    bundle = client.get(f"/logbook/recommendation/{rid}").json()
+    assert bundle["reconstructable"] is True
+    assert bundle["recommendation"]["instrument_id"] == recs[0]["instrument_id"]
+
+
+def test_user_execution_is_recorded():
+    r = client.post("/logbook/execution",
+                    json={"instrument_id": "MOMO", "side": "BUY", "quantity": 10, "price": 174.4})
+    assert r.status_code == 200 and r.json()["recorded"] is True

@@ -173,11 +173,13 @@
 <div class="tabs" id="tabs">
   <button data-tab="portfolio" class="active">Portfolio</button>
   <button data-tab="performance">Performance</button>
+  <button data-tab="logbook">Logbook</button>
   <button data-tab="alerts">Alerts</button>
   <button data-tab="chat">Chat</button>
 </div>
 <div class="tabpanel" id="tab-portfolio"></div>
 <div class="tabpanel" id="tab-performance" hidden></div>
+<div class="tabpanel" id="tab-logbook" hidden></div>
 <div class="tabpanel" id="tab-alerts" hidden></div>
 <div class="tabpanel" id="tab-chat" hidden></div>
 
@@ -216,7 +218,43 @@ async function boot(){
   renderWatchlist();
   const first = recs.recommendations[0]?.instrument_id || state.instruments[0]?.instrument_id;
   if(first) select(first);
-  loadPortfolio(); loadPerformance(); loadAlerts();
+  loadPortfolio(); loadPerformance(); loadAlerts(); loadLogbook();
+}
+
+async function loadLogbook(){
+  const lb = await fetch('/logbook').then(r=>r.json());
+  const recs = (lb.recommendations||[]).map(r=>
+    `<tr><td>${r.instrument_id}</td><td><span class="badge buy">${r.action}</span></td>`+
+    `<td class="num">${r.calibrated_probability!=null?(r.calibrated_probability*100).toFixed(0)+'%':'—'}</td>`+
+    `<td class="num up">${r.target??'—'}</td><td class="num down">${r.invalidation??'—'}</td>`+
+    `<td class="num">${r.quantity}</td><td class="dim">${r.risk_verdict}</td>`+
+    `<td><button class="act" style="padding:2px 8px;font-size:10px" onclick="reconstruct('${r.id}')">reconstruct</button></td></tr>`).join('');
+  const changes = ((lb.plans||[])[0]?.changes||[]).map(c=>
+    `<span class="move ${c.action}">${c.action} ${c.instrument_id}`+
+    (c.from_instrument?` ⟵ ${c.from_instrument}`:'')+`</span>`).join(' ') || '<span class="dim">none</span>';
+  const vetoes = (lb.risk_vetoes||[]).map(v=>
+    `<span class="move EXIT">${v.instrument_id} ${v.verdict}</span>`).join(' ') || '<span class="dim">none</span>';
+  $('#tab-logbook').innerHTML =
+    `<div class="k dim" style="text-transform:uppercase;font-size:10px">Daily logbook · as_of ${lb.as_of} · append-only</div>`+
+    `<table style="margin-top:6px"><thead><tr><th>Ticker</th><th>Action</th><th>P</th><th>Target</th>`+
+    `<th>Stop</th><th>Qty</th><th>Risk</th><th>Audit</th></tr></thead><tbody>${recs||'<tr><td colspan="8" class="dim">no recommendations logged</td></tr>'}</tbody></table>`+
+    `<div style="margin-top:12px"><div class="k dim" style="text-transform:uppercase;font-size:10px">Plan changes</div><div style="margin-top:6px">${changes}</div></div>`+
+    `<div style="margin-top:10px"><div class="k dim" style="text-transform:uppercase;font-size:10px">Risk vetoes</div><div style="margin-top:6px">${vetoes}</div></div>`+
+    `<div style="margin-top:10px" class="dim">paper fills logged: ${(lb.paper_fills||[]).length}</div>`+
+    `<div id="reconbox" style="margin-top:10px"></div>`;
+}
+
+async function reconstruct(rid){
+  const b = await fetch('/logbook/recommendation/'+rid).then(r=>r.json());
+  const rec = b.recommendation||{};
+  const runs = (b.llm_runs||[]).length, outs = (b.evaluation_outcomes||[]).length, vet = (b.risk_vetoes||[]).length;
+  $('#reconbox').innerHTML =
+    `<div class="panel"><div class="body">`+
+    `<b class="num">${rec.instrument_id} ${rec.action}</b> `+
+    `<span class="badge ${b.reconstructable?'pass':'veto'}">${b.reconstructable?'RECONSTRUCTABLE':'INCOMPLETE'}</span>`+
+    `<div class="dim num" style="margin-top:6px">model ${rec.model_version} · as_of ${rec.as_of} · `+
+    `target ${rec.target} · stop ${rec.invalidation} · P ${rec.calibrated_probability}</div>`+
+    `<div class="dim" style="margin-top:4px">linked: ${vet} veto · ${outs} outcome · ${runs} llm_run</div></div></div>`;
 }
 
 function renderWatchlist(){
@@ -345,7 +383,7 @@ function renderEvidence(docs){
 $('#tabs').addEventListener('click', e=>{
   const t=e.target.dataset.tab; if(!t) return;
   for(const b of $('#tabs').children) b.classList.toggle('active', b.dataset.tab===t);
-  for(const p of ['portfolio','performance','alerts','chat'])
+  for(const p of ['portfolio','performance','logbook','alerts','chat'])
     $('#tab-'+p).hidden = (p!==t);
 });
 

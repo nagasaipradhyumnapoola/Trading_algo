@@ -5,6 +5,7 @@ deployment (Alembic migrations under migrations/). Append-only by design.
 """
 
 from .db import init_db, make_engine, session_factory, session_scope
+from .logbook import LogbookService, row_to_dict
 from .models import (
     ALL_TABLES,
     AlertDelivery,
@@ -31,6 +32,8 @@ __all__ = [
     "init_db",
     "session_factory",
     "session_scope",
+    "LogbookService",
+    "row_to_dict",
     "AppendOnlyRepository",
     "repo",
     "PortfolioSnapshot",
