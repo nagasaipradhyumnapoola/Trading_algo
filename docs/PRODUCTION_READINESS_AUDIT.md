@@ -179,11 +179,11 @@ money, and this document supersedes the README's green phase checkmarks (those d
 
 ## D. Runtime note
 
-Local runtime is **Python 3.14.4**, on which `duckdb`, `sqlalchemy`, `lightgbm`,
-`xgboost`, `polars` have no wheels installed (grep confirms none imported). The
-directive requires standardizing on **Python 3.12** (or another fully supported
-version). CI already targets 3.12 (`.github/workflows/ci.yml`); local dev must match
-before DB/LightGBM work begins.
+**Resolved.** Standardized on **Python 3.12** (`.python-version`, `uv.lock`, CI). A
+3.12 venv is created via `uv` and the full suite (**167 tests**) + ruff pass on it.
+Core dependencies were trimmed to exactly what the code imports; heavy engines
+(`psycopg`, `lightgbm`/`xgboost`, `duckdb`) moved to opt-in extras so the base env
+installs cleanly. See [`DEVELOPMENT.md`](DEVELOPMENT.md).
 
 ---
 
@@ -193,7 +193,8 @@ before DB/LightGBM work begins.
 |---|---|---|---|
 | Audit | `4187917` | This document + README honesty banner | — |
 | A — config contract | `08dda3b` | Typed `Settings`, `APP_MODE` demo/real, fail-fast, `.env.example` blank contract, DEMO/REAL indicator, removed import-time terminal build | A1 config rows ⛔→✅ |
-| B — persistence + migrations | _(this commit)_ | SQLAlchemy models for all 13 append-only record tables, append-only repositories, Alembic baseline migration; tested on SQLite (167 tests) | A6 DB logbook ⛔→🟡 |
+| B — persistence + migrations | `d53ee0e` | SQLAlchemy models for all 13 append-only record tables, append-only repositories, Alembic baseline migration; tested on SQLite (167 tests) | A6 DB logbook ⛔→🟡 |
+| 1 — Python 3.12 baseline | _(this commit)_ | Pinned 3.12 (`.python-version`), `uv.lock`, core/extras split, mypy config, `DEVELOPMENT.md`; 167 tests + ruff pass on 3.12 | Section D resolved |
 
 **Still blocking real use:** API auth, real feeds + real FreeLLMAPI adapter, 7/9
 agents, intraday, pipeline→DB wiring, and gates 1–9. Runtime for DB work is SQLite

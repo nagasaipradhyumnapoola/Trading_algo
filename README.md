@@ -128,24 +128,24 @@ Model names are never hard-coded — routing comes from **versioned task policie
 
 ## Getting started
 
-**Prerequisites:** Python 3.11+, Docker (for Postgres/TimescaleDB + Redis).
+**Prerequisites:** Python **3.12** (pinned in `.python-version`). Docker optional
+(Postgres/TimescaleDB + Redis for real mode; dev/test use SQLite). Full commands in
+[`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md).
 
 ```bash
 git clone https://github.com/nagasaipradhyumnapoola/Trading_algo.git
 cd Trading_algo
 
-# 1) Configure environment (never commit the real .env)
-cp .env.example .env        # then fill in values
+# 1) Reproducible env (uv recommended; installs Python 3.12 + pinned deps from uv.lock)
+uv python install 3.12
+uv venv --python 3.12 .venv
+uv pip install -e ".[dev]"
+# no uv?  python3.12 -m venv .venv && pip install -e ".[dev]"
 
-# 2) Bring up local datastores
-docker compose up -d        # Postgres/TimescaleDB + Redis
+# 2) Configure (defaults to APP_MODE=demo; never commit the real .env)
+cp .env.example .env
 
-# 3) Python env + dependencies
-python -m venv .venv
-# Windows: .venv\Scripts\activate    |    macOS/Linux: source .venv/bin/activate
-pip install -e ".[dev]"
-
-# 4) Run the tests
+# 3) Run the tests (167 passing on 3.12)
 pytest -q
 ```
 
