@@ -74,3 +74,17 @@ def test_feedback_records_and_rejects_bad_label():
     assert ok.status_code == 200 and ok.json()["recorded"] is True
     bad = client.post("/feedback", json={"instrument_id": "MOMO", "label": "bogus"})
     assert bad.status_code == 422
+
+
+def test_data_mode_indicator_present():
+    r = client.get("/health")
+    assert r.headers["X-Data-Mode"] == "DEMO"          # header on every response
+    assert r.json()["data_mode"] == "DEMO"             # and in the body
+    assert client.get("/recommendations").json()["data_mode"] == "DEMO"
+
+
+def test_config_report_is_presence_only():
+    rep = client.get("/config/report").json()
+    assert rep["app_mode"] == "demo" and "config" in rep
+    assert rep["broker_write_enabled"] is False
+    assert set(rep["config"].values()) <= {"SET", "MISSING"}   # never raw values

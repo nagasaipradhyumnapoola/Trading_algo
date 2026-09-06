@@ -119,7 +119,7 @@
 <body>
 <header>
   <span class="brand">INDIAN <b>ALPHA</b></span>
-  <span class="tag sample">SAMPLE DATA</span>
+  <span class="tag sample" id="datamode">DEMO DATA</span>
   <span class="tag" id="session">as_of —</span>
   <span class="tag nav" id="navtag">NAV —</span>
   <span class="tag">REGIME: N/A</span>
@@ -199,8 +199,10 @@ async function boot(){
     fetch('/instruments').then(r=>r.json()),
     fetch('/recommendations').then(r=>r.json()),
   ]);
-  $('#session').textContent = 'as_of ' + h.as_of;
-  $('#healthtag').textContent = 'HEALTH ' + h.status;
+  $('#session').textContent = 'as_of ' + (h.as_of || '—');
+  const dm = $('#datamode'); dm.textContent = (h.data_mode||'DEMO') + ' DATA';
+  dm.style.color = h.data_mode === 'REAL' ? 'var(--up)' : 'var(--warn)';
+  $('#healthtag').textContent = 'HEALTH ' + (h.status||'—');
   $('#healthtag').style.color = h.status==='OK' ? 'var(--up)' : 'var(--down)';
   const deg = $('#degraded');
   if(h.status === 'DEGRADED'){
