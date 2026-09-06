@@ -7,9 +7,9 @@ from services.research_workers.chat import GroundedChat
 from services.research_workers.llm_gateway import (
     DataClass,
     LLMGateway,
+    MockProvider,
     ModelCapabilityRegistry,
     ModelRoute,
-    MockProvider,
 )
 from services.research_workers.llm_gateway.policies import MID
 

@@ -6,9 +6,9 @@ import json
 from services.research_workers.agents import FundamentalAgent, NewsAgent
 from services.research_workers.llm_gateway import (
     LLMGateway,
+    MockProvider,
     ModelCapabilityRegistry,
     ModelRoute,
-    MockProvider,
 )
 from services.research_workers.llm_gateway.policies import FAST
 from services.research_workers.review_queue import ReviewQueue, ReviewReason

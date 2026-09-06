@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from fastapi import FastAPI, Query
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 
@@ -38,9 +38,20 @@ async def index() -> str:
 
 @app.get("/health")
 async def health() -> dict[str, object]:
-    return {"status": "ok", "data": "sample",
-            "as_of": _TERMINAL.current_as_of.isoformat(),
-            "last_session": _TERMINAL.last.isoformat()}
+    out = {"status": "ok", "data": "sample",
+           "last_session": _TERMINAL.last.isoformat()}
+    out.update(_TERMINAL.health_dict())
+    return out
+
+
+@app.get("/metrics")
+async def metrics() -> dict[str, object]:
+    return _TERMINAL.metrics_snapshot()
+
+
+@app.get("/audit/{instrument_id}")
+async def audit(instrument_id: str) -> dict[str, object]:
+    return _TERMINAL.audit(instrument_id)
 
 
 @app.get("/instruments")
@@ -89,4 +100,21 @@ class ChatRequest(BaseModel):
 
 @app.post("/chat")
 async def chat(req: ChatRequest) -> dict[str, object]:
+    if not _TERMINAL.chat_allowed():
+        raise HTTPException(status_code=429, detail="rate limit exceeded")
     return await _TERMINAL.chat(req.question, req.instrument_id)
+
+
+class FeedbackRequest(BaseModel):
+    instrument_id: str
+    label: str                       # useful | not_useful | executed | not_executed
+    rec_id: str = ""
+    note: str = ""
+
+
+@app.post("/feedback")
+async def feedback(req: FeedbackRequest) -> dict[str, object]:
+    try:
+        return _TERMINAL.record_feedback(req.instrument_id, req.label, req.rec_id, req.note)
+    except ValueError:
+        raise HTTPException(status_code=422, detail="invalid feedback label")

@@ -8,7 +8,6 @@ trail. This is the record graded later against realized outcomes.
 
 from __future__ import annotations
 
-import json
 import uuid
 from datetime import date, datetime, timezone
 from enum import Enum

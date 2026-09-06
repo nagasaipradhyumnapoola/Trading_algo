@@ -40,7 +40,8 @@ def _bar_to_row(b: Bar) -> dict:
 
 def _row_to_bar(row: dict) -> Bar:
     turnover = row["turnover"]
-    turnover = None if turnover is None or (isinstance(turnover, float) and pd.isna(turnover)) else Decimal(str(turnover))
+    _missing = turnover is None or (isinstance(turnover, float) and pd.isna(turnover))
+    turnover = None if _missing else Decimal(str(turnover))
     return Bar(
         instrument_id=row["instrument_id"],
         timeframe=Timeframe(row["timeframe"]),

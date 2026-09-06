@@ -2,8 +2,6 @@
 
 import asyncio
 
-import pytest
-
 from services.research_workers.agents import (
     BearAgent,
     BullAgent,

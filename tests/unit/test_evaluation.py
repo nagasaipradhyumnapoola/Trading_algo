@@ -2,7 +2,6 @@
 
 from datetime import date, timedelta
 
-from services.ingestion import Bar, InMemoryBarRepository
 from services.evaluation import (
     Action,
     BaselineStrategy,
@@ -16,6 +15,7 @@ from services.evaluation import (
     run_backtest,
     simulate,
 )
+from services.ingestion import Bar, InMemoryBarRepository
 
 
 def _bar(repo, iid, d, o, h, low, c, v=100000):

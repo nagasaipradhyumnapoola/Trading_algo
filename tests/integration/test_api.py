@@ -9,7 +9,7 @@ client = TestClient(app)
 
 def test_health():
     r = client.get("/health").json()
-    assert r["status"] == "ok" and r["data"] == "sample" and "as_of" in r
+    assert r["status"] in ("OK", "DEGRADED") and r["data"] == "sample" and "as_of" in r
 
 
 def test_recommendations_are_complete_and_calibrated():
@@ -50,3 +50,27 @@ def test_chat_is_grounded():
 def test_chat_refuses_without_evidence():
     r = client.post("/chat", json={"question": "unrelated", "instrument_id": "NOPE"}).json()
     assert r["grounded"] is False
+
+
+def test_health_reports_degraded_fields():
+    h = client.get("/health").json()
+    assert h["status"] in ("OK", "DEGRADED")
+    assert "suppress_recommendations" in h and "llm_available" in h
+
+
+def test_metrics_expose_derived_rates():
+    d = client.get("/metrics").json()["derived"]
+    assert {"llm_failure_rate", "risk_veto_rate", "recommendation_coverage"} <= set(d)
+
+
+def test_audit_bundle_is_reconstructable():
+    a = client.get("/audit/MOMO").json()
+    assert a["reconstructable"] is True
+    assert a["recommendation"]["instrument_id"] == "MOMO" and a["evidence"]
+
+
+def test_feedback_records_and_rejects_bad_label():
+    ok = client.post("/feedback", json={"instrument_id": "MOMO", "label": "useful"})
+    assert ok.status_code == 200 and ok.json()["recorded"] is True
+    bad = client.post("/feedback", json={"instrument_id": "MOMO", "label": "bogus"})
+    assert bad.status_code == 422

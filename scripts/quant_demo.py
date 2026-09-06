@@ -20,17 +20,26 @@ import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from services.evaluation import LabelConfig, label_signal, purged_walk_forward   # noqa: E402
-from services.ingestion.models import Timeframe                                   # noqa: E402
-from services.ingestion.sample import SAMPLE_START, build_sample_universe         # noqa: E402
-from services.quant import (                                                     # noqa: E402
-    Approval, ModelCard, ModelRegistry, beats_baseline, compute_features,
+from services.evaluation import LabelConfig, label_signal, purged_walk_forward  # noqa: E402
+from services.ingestion.models import Timeframe  # noqa: E402
+from services.ingestion.sample import SAMPLE_START, build_sample_universe  # noqa: E402
+from services.quant import (  # noqa: E402
+    Approval,
+    ModelCard,
+    ModelRegistry,
+    beats_baseline,
+    compute_features,
 )
-from services.quant.calibration import (                                         # noqa: E402
-    IsotonicCalibrator, brier, precision_at_coverage, reliability_curve,
+from services.quant.calibration import (  # noqa: E402
+    IsotonicCalibrator,
+    brier,
+    precision_at_coverage,
+    reliability_curve,
 )
-from services.quant.ml import (                                                  # noqa: E402
-    DEFAULT_FEATURES, BaseRateModel, LogisticModel, MomentumRuleModel,
+from services.quant.ml import (  # noqa: E402
+    DEFAULT_FEATURES,
+    LogisticModel,
+    MomentumRuleModel,
 )
 
 N = 160

@@ -50,6 +50,7 @@ def beats_baseline(candidate: dict[str, float], baseline: dict[str, float],
 class ModelRegistry:
     def __init__(self, path: str | Path | None = None) -> None:
         self._cards: dict[str, ModelCard] = {}
+        self._champion_history: list[str] = []
         self._path = Path(path) if path else None
 
     def register(self, card: ModelCard) -> ModelCard:
@@ -71,8 +72,23 @@ class ModelRegistry:
             if card.approval is Approval.CHAMPION and mid != model_id:
                 card.approval = Approval.APPROVED         # demote previous champion
         self._cards[model_id].approval = Approval.CHAMPION
+        if not self._champion_history or self._champion_history[-1] != model_id:
+            self._champion_history.append(model_id)
         self._persist()
         return self._cards[model_id]
+
+    def rollback(self) -> ModelCard | None:
+        """Revert to the previous champion. Code-only — no data migration."""
+        if len(self._champion_history) < 2:
+            return None
+        self._champion_history.pop()                     # drop current
+        previous = self._champion_history[-1]
+        for mid, card in self._cards.items():
+            if card.approval is Approval.CHAMPION and mid != previous:
+                card.approval = Approval.APPROVED
+        self._cards[previous].approval = Approval.CHAMPION
+        self._persist()
+        return self._cards[previous]
 
     def champion(self) -> ModelCard | None:
         return next((c for c in self._cards.values() if c.approval is Approval.CHAMPION), None)

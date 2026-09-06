@@ -16,22 +16,47 @@ import numpy as np
 
 from services.alerts import AlertEngine, make_new_opportunity, make_risk_veto
 from services.evaluation import (
-    CostModel, LabelConfig, PaperBroker, TradeSignal, compute_performance,
-    label_signal, precision_by_bucket,
+    CostModel,
+    LabelConfig,
+    PaperBroker,
+    TradeSignal,
+    compute_performance,
+    label_signal,
+    precision_by_bucket,
 )
 from services.ingestion.models import Timeframe
 from services.ingestion.sample import SAMPLE_START, build_sample_universe
+from services.monitoring import (
+    Feedback,
+    FeedbackLabel,
+    FeedbackStore,
+    HealthInputs,
+    MetricsRegistry,
+    RateLimiter,
+    build_audit_bundle,
+    evaluate_health,
+)
 from services.quant import ScanConfig, compute_features, scan
 from services.quant.calibration import IsotonicCalibrator
 from services.quant.ml import DEFAULT_FEATURES, LogisticModel
 from services.research_workers.chat import GroundedChat
 from services.research_workers.llm_gateway import (
-    DataClass, LLMGateway, ModelCapabilityRegistry, ModelRoute, MockProvider,
+    DataClass,
+    LLMGateway,
+    MockProvider,
+    ModelCapabilityRegistry,
+    ModelRoute,
 )
 from services.research_workers.llm_gateway.policies import MID
 from services.risk_portfolio import (
-    Portfolio, Holding, RecAction, RiskInputs, assess_risk, build_recommendation,
-    recommend_rotation, size_position,
+    Holding,
+    Portfolio,
+    RecAction,
+    RiskInputs,
+    assess_risk,
+    build_recommendation,
+    recommend_rotation,
+    size_position,
 )
 
 _N = 160
@@ -53,6 +78,7 @@ class TerminalService:
         self._portfolio()
         self._alerts()
         self._chat_setup()
+        self._observability()
 
     # -- build steps -----------------------------------------------------------
 
@@ -192,7 +218,54 @@ class TerminalService:
                                 permitted_data_classification=DataClass.USER))
         self._chat = GroundedChat(LLMGateway(MockProvider(_chat_responder), reg))
 
+    def _observability(self) -> None:
+        self.metrics = MetricsRegistry()
+        self.metrics.incr("candidates", len(self.recs) + len(self.vetoed))
+        self.metrics.incr("recommendations", len(self.recs))
+        self.metrics.incr("risk_vetoes", len(self.vetoed))
+        self.metrics.incr("alerts_delivered", len(self.alert_rows))
+        self.feedback = FeedbackStore()
+        self.rate = RateLimiter(limit=30, window_s=10.0)
+        self.data_snapshot = "sample-seed-7"
+
     # -- API surface -----------------------------------------------------------
+
+    def metrics_snapshot(self) -> dict:
+        runs = self._chat.gateway.runs
+        failures = sum(1 for r in runs if r.state.value == "failed")
+        self.metrics.set_gauge("llm_runs", len(runs))
+        self.metrics.set_gauge("llm_failures", failures)
+        snap = self.metrics.snapshot()
+        snap["derived"]["llm_failure_rate"] = failures / len(runs) if runs else 0.0
+        return snap
+
+    def health_dict(self) -> dict:
+        # sample feed is always fresh; a real feed passes its true age + LLM health here
+        rep = evaluate_health(HealthInputs(feed_age_days=0.0, llm_available=True))
+        out = rep.model_dump(mode="json")
+        out["as_of"] = self.current_as_of.isoformat()
+        return out
+
+    def chat_allowed(self) -> bool:
+        return self.rate.allow("chat")
+
+    def audit(self, instrument_id: str) -> dict:
+        rec = next((r for r in self.recs if r["instrument_id"] == instrument_id), None)
+        if rec is None:
+            return {"error": "no recommendation", "instrument_id": instrument_id}
+        bundle = build_audit_bundle(
+            rec, evidence=self.evidence_by_id.get(instrument_id, []),
+            llm_runs=[r.model_dump(mode="json") for r in self._chat.gateway.runs],
+            model_version=rec["model_version"], data_snapshot=self.data_snapshot)
+        out = bundle.model_dump(mode="json")
+        out["reconstructable"] = bundle.is_reconstructable()
+        return out
+
+    def record_feedback(self, instrument_id: str, label: str, rec_id: str = "",
+                        note: str = "") -> dict:
+        fb = self.feedback.record(Feedback(instrument_id=instrument_id, rec_id=rec_id,
+                                           label=FeedbackLabel(label), note=note))
+        return {"recorded": True, "label": fb.label.value, "total": len(self.feedback.items())}
 
     def instruments(self) -> list[dict]:
         return [{"instrument_id": i.instrument_id, "symbol": i.symbol, "name": i.name,

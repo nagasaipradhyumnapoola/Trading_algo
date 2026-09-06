@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from datetime import date
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from services.ingestion.instruments import InstrumentMaster
 from services.ingestion.models import Timeframe

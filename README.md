@@ -9,7 +9,8 @@ An agentic, market-wide opportunity-discovery and quant decision-support engine 
 
 `DISCOVER → RESEARCH → DEBATE → QUANTIFY → RISK-CHECK → RANK → RECOMMEND → OBSERVE → LEARN`
 
-![Status](https://img.shields.io/badge/status-Phase%201%20MVP%20✓%20(sample%20data)-brightgreen)
+![Status](https://img.shields.io/badge/status-MVP%20complete%20·%20sample%20data-16c784)
+![CI](https://github.com/nagasaipradhyumnapoola/Trading_algo/actions/workflows/ci.yml/badge.svg)
 ![Market](https://img.shields.io/badge/market-NSE%20%2F%20BSE-blue)
 ![Agents](https://img.shields.io/badge/AI%20agents-9-8A2BE2)
 ![LLM](https://img.shields.io/badge/LLM%20access-gateway%20only-6f42c1)
@@ -192,7 +193,7 @@ The [phase-wise plan](docs/PHASE_WISE_BUILD_PLAN.md) is the authoritative build 
 | **4** | Quant, event studies, calibrated ranking | ✅ **core done (sample data)** — event studies · fixed labels · logistic vs base-rate/momentum · isotonic/Platt calibration + reliability · purged walk-forward · model registry. LightGBM/XGBoost = drop-in |
 | **5** | Risk, portfolio, paper trading, rotation | ✅ **core done (sample data)** — risk vetoes · position sizing · rotation · paper simulator (NAV rebuilds from ledger) · performance dashboard · complete recommendation object |
 | **6** | Terminal UI, alerts, grounded chat | ✅ **core done (sample data)** — full dark terminal (chart + recommendation card + risk/evidence panels + portfolio/performance/alerts/chat tabs) · alert engine · grounded chat |
-| **7** | Production hardening + controlled release | ⚪ planned |
+| **7** | Production hardening + controlled release | ✅ **core done** — CI (ruff+pytest) · observability (`/metrics`) · degraded mode · rate limiting · drift (PSI) · model rollback · end-to-end audit export · feedback store · runbooks |
 
 **Delivery gates** (from the plan): baseline must be *reproducible* (end P1) → LLM extraction must be *grounded* (end P3) → ranking must *beat baseline on untouched data after costs* (end P4) → paper trading must *match its simulated assumptions* (end P5) before anything is called production-ready.
 

@@ -2,7 +2,7 @@
 
 from datetime import date
 
-from services.evaluation import Label, LabelConfig, label_dataset, label_signal
+from services.evaluation import LabelConfig, label_dataset, label_signal
 from services.evaluation.backtest import Outcome
 from services.ingestion import Bar, InMemoryBarRepository
 

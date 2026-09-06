@@ -8,9 +8,9 @@ from datetime import date, timedelta
 
 from services.ingestion import (
     Bar,
-    InstrumentMaster,
     InMemoryBarRepository,
     Instrument,
+    InstrumentMaster,
 )
 from services.quant import ScanConfig, scan
 

@@ -18,18 +18,28 @@ import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from services.evaluation import (                                                # noqa: E402
-    CostModel, LabelConfig, PaperBroker, TradeSignal, compute_performance,
-    label_signal, precision_by_bucket, reconstruct_cash,
+from services.evaluation import (  # noqa: E402
+    CostModel,
+    LabelConfig,
+    PaperBroker,
+    TradeSignal,
+    compute_performance,
+    label_signal,
+    reconstruct_cash,
 )
-from services.ingestion.models import Timeframe                                  # noqa: E402
-from services.ingestion.sample import SAMPLE_START, build_sample_universe        # noqa: E402
-from services.quant import ScanConfig, compute_features, scan                    # noqa: E402
-from services.quant.calibration import IsotonicCalibrator                        # noqa: E402
-from services.quant.ml import DEFAULT_FEATURES, LogisticModel                     # noqa: E402
-from services.risk_portfolio import (                                            # noqa: E402
-    Portfolio, RecAction, RiskInputs, assess_risk, build_recommendation,
-    recommend_rotation, size_position,
+from services.ingestion.models import Timeframe  # noqa: E402
+from services.ingestion.sample import SAMPLE_START, build_sample_universe  # noqa: E402
+from services.quant import ScanConfig, compute_features, scan  # noqa: E402
+from services.quant.calibration import IsotonicCalibrator  # noqa: E402
+from services.quant.ml import DEFAULT_FEATURES, LogisticModel  # noqa: E402
+from services.risk_portfolio import (  # noqa: E402
+    Portfolio,
+    RecAction,
+    RiskInputs,
+    assess_risk,
+    build_recommendation,
+    recommend_rotation,
+    size_position,
 )
 
 N = 160

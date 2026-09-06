@@ -17,11 +17,11 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from services.evaluation import ExperimentRecord, is_reproducible          # noqa: E402
+from services.evaluation import ExperimentRecord, is_reproducible  # noqa: E402
 from services.ingestion import RawDocumentStore, TradingCalendar, run_quality  # noqa: E402
-from services.ingestion.parquet_store import ParquetBarRepository          # noqa: E402
+from services.ingestion.parquet_store import ParquetBarRepository  # noqa: E402
 from services.ingestion.sample import SAMPLE_START, build_sample_universe  # noqa: E402
-from services.quant.feature_store import build_dataset, to_dataframe       # noqa: E402
+from services.quant.feature_store import build_dataset, to_dataframe  # noqa: E402
 
 
 def main() -> None:

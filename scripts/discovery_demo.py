@@ -19,23 +19,23 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from services.ingestion.sample import build_sample_universe                     # noqa: E402
-from services.quant import ScanConfig, scan                                     # noqa: E402
-from services.research_workers.agents import NewsAgent                          # noqa: E402
-from services.research_workers.discovery import (                              # noqa: E402
+from services.ingestion.sample import build_sample_universe  # noqa: E402
+from services.quant import ScanConfig, scan  # noqa: E402
+from services.research_workers.agents import NewsAgent  # noqa: E402
+from services.research_workers.discovery import (  # noqa: E402
     DiscoveryCandidate,
     DiscoverySignal,
     discovery_score,
     rank_discoveries,
 )
-from services.research_workers.llm_gateway import (                            # noqa: E402
+from services.research_workers.llm_gateway import (  # noqa: E402
     LLMGateway,
+    MockProvider,
     ModelCapabilityRegistry,
     ModelRoute,
-    MockProvider,
 )
-from services.research_workers.llm_gateway.policies import FAST                 # noqa: E402
-from services.research_workers.review_queue import ReviewQueue                  # noqa: E402
+from services.research_workers.llm_gateway.policies import FAST  # noqa: E402
+from services.research_workers.review_queue import ReviewQueue  # noqa: E402
 
 
 def _responder(call: dict) -> str:

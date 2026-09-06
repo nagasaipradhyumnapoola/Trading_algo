@@ -107,6 +107,13 @@
   button.act:hover{background:var(--panel-2)}
   footer{padding:10px 14px;color:var(--text-dim);border-top:1px solid var(--border);font-size:11px}
   .veto-note{color:var(--down);font-family:var(--font-mono);font-size:11px;padding:8px 10px}
+  .degraded{margin:0;padding:8px 14px;background:var(--down-dim);color:#fff;
+    font-family:var(--font-mono);font-size:11px;border-bottom:1px solid var(--down)}
+  .fb{margin-top:12px;display:flex;gap:6px;align-items:center;border-top:1px solid var(--border-soft);padding-top:8px}
+  .fb button{font-size:10px;padding:3px 9px;background:transparent;border:1px solid var(--border);
+    color:var(--text-muted);border-radius:2px;cursor:pointer;font-family:var(--font-mono)}
+  .fb button:hover{background:var(--panel-2)}
+  .fb .k{color:var(--text-dim)}
 </style>
 </head>
 <body>
@@ -116,9 +123,11 @@
   <span class="tag" id="session">as_of —</span>
   <span class="tag nav" id="navtag">NAV —</span>
   <span class="tag">REGIME: N/A</span>
+  <span class="tag" id="healthtag">HEALTH —</span>
   <span class="spacer"></span>
   <span class="tag">NO BROKER · MANUAL EXECUTION</span>
 </header>
+<div id="degraded" class="degraded" hidden></div>
 
 <div class="workspace">
   <!-- LEFT: watchlist / scanner -->
@@ -191,6 +200,14 @@ async function boot(){
     fetch('/recommendations').then(r=>r.json()),
   ]);
   $('#session').textContent = 'as_of ' + h.as_of;
+  $('#healthtag').textContent = 'HEALTH ' + h.status;
+  $('#healthtag').style.color = h.status==='OK' ? 'var(--up)' : 'var(--down)';
+  const deg = $('#degraded');
+  if(h.status === 'DEGRADED'){
+    deg.hidden = false;
+    deg.textContent = 'DEGRADED — ' + (h.degraded_reasons||[]).join(', ') +
+      (h.suppress_recommendations ? ' · recommendations suppressed (deterministic results preserved)' : '');
+  } else { deg.hidden = true; }
   state.instruments = instr.instruments;
   for(const r of recs.recommendations) state.recs[r.instrument_id] = r;
   for(const v of recs.vetoed) state.vetoed[v.instrument_id] = v;
@@ -288,8 +305,20 @@ function renderRec(tkr){
       g('Model', rec.model_version)+
     `</div>`+
     `<div style="margin-top:10px"><div class="k">Thesis</div><div class="muted">${rec.thesis}</div></div>`+
-    `<div style="margin-top:6px"><div class="k">What invalidates</div><div class="muted">Close at/through ${rec.invalidation}, or the catalyst is retracted.</div></div>`;
+    `<div style="margin-top:6px"><div class="k">What invalidates</div><div class="muted">Close at/through ${rec.invalidation}, or the catalyst is retracted.</div></div>`+
+    `<div class="fb"><span class="k">Feedback</span>`+
+      `<button data-fb="useful">USEFUL</button>`+
+      `<button data-fb="not_useful">NOT USEFUL</button>`+
+      `<button data-fb="executed">EXECUTED</button>`+
+      `<span id="fbmsg" class="dim"></span></div>`;
 }
+
+$('#rec').addEventListener('click', e=>{
+  const label = e.target.dataset.fb; if(!label || !state.selected) return;
+  fetch('/feedback',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({instrument_id:state.selected, label})})
+    .then(r=>r.json()).then(x=>{ const m=$('#fbmsg'); if(m) m.textContent='recorded: '+x.label; });
+});
 
 function renderRisk(tkr){
   const rec = state.recs[tkr], veto = state.vetoed[tkr], box=$('#risk');

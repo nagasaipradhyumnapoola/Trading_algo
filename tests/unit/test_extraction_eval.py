@@ -7,9 +7,9 @@ from services.research_workers.agents import NewsAgent
 from services.research_workers.extraction_eval import LabeledExample, evaluate
 from services.research_workers.llm_gateway import (
     LLMGateway,
+    MockProvider,
     ModelCapabilityRegistry,
     ModelRoute,
-    MockProvider,
 )
 from services.research_workers.llm_gateway.policies import FAST
 
