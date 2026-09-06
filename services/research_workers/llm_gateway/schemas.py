@@ -104,11 +104,33 @@ class EntityResolutionResult(CitedModel):
     resolved: dict[str, str] = Field(default_factory=dict)   # mention -> instrument_id
 
 
+class SentimentResult(CitedModel):
+    sentiment: float = Field(default=0.0, ge=-1.0, le=1.0)
+    label: Literal["positive", "negative", "neutral"] = "neutral"
+    rationale: str = ""
+    sources_considered: int = 0
+    manipulation_flags: list[str] = Field(default_factory=list)
+
+
+class JudgeResult(CitedModel):
+    action: Literal["BUY", "SELL", "HOLD", "ROTATE", "NO_TRADE"] = "NO_TRADE"
+    thesis: str = ""
+    unknowns: list[str] = Field(default_factory=list)
+    claims: list[Claim] = Field(default_factory=list)
+
+    def cited_ids(self) -> set[str]:
+        ids = set(self.citations)
+        for c in self.claims:
+            ids |= c.cited_ids()
+        return ids
+
+
 _MODELS: dict[LLMTask, type[CitedModel]] = {
     LLMTask.EVENT_EXTRACTION: ExtractionResult,
-    LLMTask.RESEARCH_SYNTHESIS: ExtractionResult,
+    LLMTask.RESEARCH_SYNTHESIS: JudgeResult,
     LLMTask.ENTITY_RESOLUTION: EntityResolutionResult,
     LLMTask.DOCUMENT_SUMMARY: SummaryResult,
+    LLMTask.SENTIMENT: SentimentResult,
     LLMTask.BULL_CASE: ThesisResult,
     LLMTask.BEAR_CASE: ThesisResult,
     LLMTask.CHAT_ANSWER: ChatAnswer,

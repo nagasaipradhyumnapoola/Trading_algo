@@ -94,14 +94,14 @@ degraded mode) — all real and tested, just never connected to a real provider 
 | Injection defense | ✅ TESTED | `sanitize.py`, gateway tests | Source text never reaches system role | Re-verify with real content |
 | News/Event agent | 🟡 SAMPLE-ONLY | `agents/news.py` | Implemented via gateway; only run on mock | Real provider + labeled precision/recall |
 | Fundamental agent | 🟡 SAMPLE-ONLY | `agents/fundamental.py` | Same | Same |
-| Discovery agent | ⛔ UNIMPLEMENTED | `agents/discovery.py:16` | `NotImplementedError` | Implement + wire scanner/web |
-| Market agent | ⛔ UNIMPLEMENTED | `agents/market.py:16` | `NotImplementedError` | Implement (consume deterministic features) |
-| Sentiment agent | ⛔ UNIMPLEMENTED | `agents/sentiment.py:17` | `NotImplementedError` | Implement dedup-aware sentiment |
-| Historical agent | ⛔ UNIMPLEMENTED | `agents/historical.py:17` | `NotImplementedError` | PIT analogue retrieval |
-| Bull agent | ⛔ UNIMPLEMENTED | `agents/bull.py:17` | `NotImplementedError` | Implement over shared evidence |
-| Bear agent | ⛔ UNIMPLEMENTED | `agents/bear.py:17` | `NotImplementedError` | Implement over shared evidence |
-| Judge agent | ⛔ UNIMPLEMENTED | `agents/judge.py:19` | `NotImplementedError` | Implement synthesis; cannot override risk |
-| Orchestration (parallel floor) | ⛔ UNIMPLEMENTED | no `asyncio.gather` pipeline wiring agents | Agents not composed into a floor | Async orchestration per pipeline |
+| Discovery agent | ✅ TESTED (Step 6) | `agents/discovery.py` | Deterministic: scanner + discovery score | Wire web/filings follow-up queries |
+| Market agent | ✅ TESTED (Step 6) | `agents/market.py` | Deterministic read of computed features; no LLM | Real intraday features |
+| Sentiment agent | 🟡 SAMPLE-ONLY (Step 6) | `agents/sentiment.py` | Gateway SENTIMENT task; dedup/manipulation flags | Real provider + news feed |
+| Historical agent | ✅ TESTED (Step 6) | `agents/historical.py` | Point-in-time analogue retrieval via event study | Real event DB |
+| Bull agent | 🟡 SAMPLE-ONLY (Step 6) | `agents/bull.py` | Gateway BULL_CASE over shared evidence | Real provider |
+| Bear agent | 🟡 SAMPLE-ONLY (Step 6) | `agents/bear.py` | Gateway BEAR_CASE, equal evidence | Real provider |
+| Judge agent | 🟡 SAMPLE-ONLY (Step 6) | `agents/judge.py` | Gateway RESEARCH_SYNTHESIS -> action; cannot override risk | Real provider |
+| Orchestration (parallel floor) | ✅ TESTED (Step 6) | `research_workers/floor.py` | Async floor: parallel analysts -> shared evidence -> Bull/Bear -> Judge; `floor_stats` | Wire into the pipeline/terminal |
 | Grounded chat | 🟡 SAMPLE-ONLY | `chat.py`, `test_chat.py` | Real logic; mock provider | Real provider |
 | Extraction eval harness | ✅ TESTED | `extraction_eval.py`, tests | precision/recall by type | Feed real labeled sample |
 
@@ -139,7 +139,7 @@ degraded mode) — all real and tested, just never connected to a real provider 
 | # | Gate | Status |
 |---|---|---|
 | 1 | Real feeds + real LLM routing, no sample fallback | ⛔ FAIL — no real feed, mock LLM only |
-| 2 | All nine agents work or explicitly disabled; no placeholder | ⛔ FAIL — 7/9 `NotImplementedError` |
+| 2 | All nine agents work or explicitly disabled; no placeholder | ✅ PASS — all 9 implemented (no `NotImplementedError`); async floor. LLM agents run on mock until FreeLLMAPI is live |
 | 3 | Intraday + swing backtests pass leakage/cost/quality checks | ⛔ FAIL — no intraday; EOD backtest is leakage/cost-checked ✅ |
 | 4 | Model beats fixed baseline on untouched data after costs, or rejected | 🟡 PARTIAL — mechanism exists + demoed on synthetic; not on real data |
 | 5 | Calibration validated; no uncalibrated certainty shown | 🟡 PARTIAL — calibration engine + reliability exist; not validated on real OOS |
@@ -197,7 +197,8 @@ installs cleanly. See [`DEVELOPMENT.md`](DEVELOPMENT.md).
 | 1 — Python 3.12 baseline | `bd3e5dc` | Pinned 3.12 (`.python-version`), `uv.lock`, core/extras split, mypy config, `DEVELOPMENT.md`; 167 tests + ruff pass on 3.12 | Section D resolved |
 | 2 — daily logbook | `40261b4` | `LogbookService` writes the day (recs/decisions/vetoes/fills/alerts/plan/portfolio) to the append-only tables; `/logbook` + Logbook UI tab; recommendation reconstruction verified in-browser; 173 tests | A6 logbook wired (demo); gate 8 improved |
 | 3 — real FreeLLMAPI adapter | `5ddd1a8` | `FreeLLMProvider` + `build_real_gateway` to the real FreeLLMAPI wire format; `scripts/freellm_smoke.py` for live verification; fixed an inverted data-classification route gate exposed by the real routes; 179 tests | A4 provider ⛔→🟡 |
-| 3 — provider-agnostic interfaces | _(this commit)_ | `services/providers` Protocols (market/news/filings) + config-driven selection + sample impls + provider→quant bridge + `/providers`; real mode fails fast on unconfigured provider; demo terminal now uses the interface; 187 tests | A2 data adapters ⛔→🟡 |
+| 3 — provider-agnostic interfaces | `4c8940e` | `services/providers` Protocols (market/news/filings) + config-driven selection + sample impls + provider→quant bridge + `/providers`; real mode fails fast on unconfigured provider; demo terminal now uses the interface; 187 tests | A2 data adapters ⛔→🟡 |
+| 6 — complete the 9 agents | _(this commit)_ | Implemented all 7 remaining agents (Market/Historical/Discovery deterministic; Sentiment/Bull/Bear/Judge via gateway) + `sentiment`/`judge` task schemas + async `ResearchFloor` + `floor_stats`; zero `NotImplementedError`; 193 tests | **Gate 2 PASS**; A4 agents ⛔→✅/🟡 |
 
 **Still blocking real use:** API auth, real feeds + real FreeLLMAPI adapter, 7/9
 agents, intraday, pipeline→DB wiring, and gates 1–9. Runtime for DB work is SQLite

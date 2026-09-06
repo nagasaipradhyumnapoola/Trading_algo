@@ -21,6 +21,7 @@ class LLMTask(str, Enum):
     EVENT_EXTRACTION = "event_extraction"
     ENTITY_RESOLUTION = "entity_resolution"
     DOCUMENT_SUMMARY = "document_summary"
+    SENTIMENT = "sentiment"
     BULL_CASE = "bull_case"
     BEAR_CASE = "bear_case"
     RESEARCH_SYNTHESIS = "research_synthesis"

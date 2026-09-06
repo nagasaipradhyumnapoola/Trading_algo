@@ -41,6 +41,14 @@ DEFAULT_POLICIES: dict[LLMTask, TaskPolicy] = {
         retry=RetryPolicy(max_retries=1), max_cost=0.03,
         data_classification=DataClass.PUBLIC, cacheable=True,
     ),
+    LLMTask.SENTIMENT: TaskPolicy(
+        task=LLMTask.SENTIMENT, version="1.0",
+        allowed_routes=[FAST], fallback_order=[MID],
+        timeout_s=20, token_budget=3000, temperature=0.0,
+        response_schema="sentiment.schema.json",
+        retry=RetryPolicy(max_retries=1), max_cost=0.02,
+        data_classification=DataClass.INTERNAL, cacheable=False,
+    ),
     LLMTask.BULL_CASE: TaskPolicy(
         task=LLMTask.BULL_CASE, version="1.0",
         allowed_routes=[REASONING], fallback_order=[MID],

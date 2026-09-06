@@ -30,6 +30,8 @@ from .schemas import (
     EventCandidate,
     EventType,
     ExtractionResult,
+    JudgeResult,
+    SentimentResult,
     ThesisResult,
     response_model_for,
 )
@@ -67,5 +69,7 @@ __all__ = [
     "EventCandidate",
     "ExtractionResult",
     "ThesisResult",
+    "SentimentResult",
+    "JudgeResult",
     "response_model_for",
 ]

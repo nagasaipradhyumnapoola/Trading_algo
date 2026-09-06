@@ -30,9 +30,18 @@ _SYSTEM: dict[LLMTask, str] = {
         "You build the strongest evidence-grounded bear case: priced-in risk, weak "
         "fundamentals, liquidity/governance/execution risk. Cite sources. Return only JSON."
     ),
+    LLMTask.SENTIMENT: (
+        "You summarize source-weighted sentiment for an Indian equity. Never treat social "
+        "chatter as fact; flag duplicated/syndicated/coordinated posts and pump behavior. "
+        "Cite source ids. Return only JSON."
+    ),
     LLMTask.RESEARCH_SYNTHESIS: (
-        "You synthesize analyst outputs into a structured view. Cite sources. "
-        "Numbers (probability, expected return, risk) are NOT yours to produce. Return only JSON."
+        "You are the Judge. Synthesize the analyst outputs and the Bull/Bear cases over the "
+        "SAME evidence into a structured thesis, list unknowns and what would invalidate it, "
+        "and recommend one action: BUY, SELL, HOLD, ROTATE, or NO_TRADE. Cite source ids. "
+        "You do NOT produce probabilities, expected return, position size, or risk vetoes — "
+        "those are deterministic engine outputs, and you cannot override the risk engine. "
+        "Return only JSON."
     ),
     LLMTask.CHAT_ANSWER: (
         "You answer only from the provided, timestamped evidence. If unknown, say so. "
