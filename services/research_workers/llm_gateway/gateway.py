@@ -147,8 +147,9 @@ class LLMGateway:
                 continue
             seen.add(name)
             route = self.registry.get(name)
+            # a route must be cleared for AT LEAST the task's data sensitivity
             if (route and route.healthy and not self.breaker.is_open(name)
-                    and _DATA_ORDER[route.permitted_data_classification] <= _DATA_ORDER[max_class]):
+                    and _DATA_ORDER[route.permitted_data_classification] >= _DATA_ORDER[max_class]):
                 out.append(route)
         return out
 

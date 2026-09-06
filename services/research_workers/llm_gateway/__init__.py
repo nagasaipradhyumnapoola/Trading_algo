@@ -12,6 +12,8 @@ from .contracts import (
     ModelRoute,
     TaskPolicy,
 )
+from .factory import build_real_gateway, build_real_registry
+from .freellm import FreeLLMProvider, health_check
 from .gateway import CircuitBreaker, LLMGateway
 from .policies import DEFAULT_POLICIES, get_policy
 from .providers import (
@@ -52,6 +54,10 @@ __all__ = [
     "AsyncMockProvider",
     "ProviderError",
     "ProviderTimeout",
+    "FreeLLMProvider",
+    "health_check",
+    "build_real_gateway",
+    "build_real_registry",
     "sanitize_source",
     "build_user_prompt",
     "system_for",

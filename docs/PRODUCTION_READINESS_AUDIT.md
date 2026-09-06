@@ -90,7 +90,7 @@ degraded mode) — all real and tested, just never connected to a real provider 
 | Component | Status | Evidence | Gap | Production gate |
 |---|---|---|---|---|
 | Gateway pipeline | ✅ TESTED | `gateway.py`, `test_llm_gateway.py` | Routing/validation/citation/fallback/breaker/cache/audit/degraded — all real | Exercise against a real provider |
-| Provider adapter (FreeLLMAPI) | ⛔ UNIMPLEMENTED | `providers.py` — Mock only, no `httpx` | No real LLM call path | Real adapter verified against FreeLLMAPI docs |
+| Provider adapter (FreeLLMAPI) | 🟡 SAMPLE-ONLY (Step 3) | `llm_gateway/freellm.py`, `factory.py`, `test_freellm.py` | Real adapter to the documented FreeLLMAPI wire format (`/chat/completions`, `Bearer freellmapi-<key>`, `response_format:"json_object"`, `X-Routed-Via`); tested via simulated transport + end-to-end through the gateway. NOT yet run against a live server or wired into the pipeline | Live smoke (`scripts/freellm_smoke.py`) against the running server + real-mode wiring |
 | Injection defense | ✅ TESTED | `sanitize.py`, gateway tests | Source text never reaches system role | Re-verify with real content |
 | News/Event agent | 🟡 SAMPLE-ONLY | `agents/news.py` | Implemented via gateway; only run on mock | Real provider + labeled precision/recall |
 | Fundamental agent | 🟡 SAMPLE-ONLY | `agents/fundamental.py` | Same | Same |
@@ -195,7 +195,8 @@ installs cleanly. See [`DEVELOPMENT.md`](DEVELOPMENT.md).
 | A — config contract | `08dda3b` | Typed `Settings`, `APP_MODE` demo/real, fail-fast, `.env.example` blank contract, DEMO/REAL indicator, removed import-time terminal build | A1 config rows ⛔→✅ |
 | B — persistence + migrations | `d53ee0e` | SQLAlchemy models for all 13 append-only record tables, append-only repositories, Alembic baseline migration; tested on SQLite (167 tests) | A6 DB logbook ⛔→🟡 |
 | 1 — Python 3.12 baseline | `bd3e5dc` | Pinned 3.12 (`.python-version`), `uv.lock`, core/extras split, mypy config, `DEVELOPMENT.md`; 167 tests + ruff pass on 3.12 | Section D resolved |
-| 2 — daily logbook | _(this commit)_ | `LogbookService` writes the day (recs/decisions/vetoes/fills/alerts/plan/portfolio) to the append-only tables; `/logbook` + Logbook UI tab; recommendation reconstruction verified in-browser; 173 tests | A6 logbook wired (demo); gate 8 improved |
+| 2 — daily logbook | `40261b4` | `LogbookService` writes the day (recs/decisions/vetoes/fills/alerts/plan/portfolio) to the append-only tables; `/logbook` + Logbook UI tab; recommendation reconstruction verified in-browser; 173 tests | A6 logbook wired (demo); gate 8 improved |
+| 3 — real FreeLLMAPI adapter | _(this commit)_ | `FreeLLMProvider` + `build_real_gateway` to the real FreeLLMAPI wire format; `scripts/freellm_smoke.py` for live verification; fixed an inverted data-classification route gate exposed by the real routes; 179 tests | A4 provider ⛔→🟡 |
 
 **Still blocking real use:** API auth, real feeds + real FreeLLMAPI adapter, 7/9
 agents, intraday, pipeline→DB wiring, and gates 1–9. Runtime for DB work is SQLite

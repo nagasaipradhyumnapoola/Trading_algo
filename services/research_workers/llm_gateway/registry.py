@@ -27,18 +27,19 @@ class ModelCapabilityRegistry:
         """Healthy routes permitted for a given data classification."""
         order = {DataClass.PUBLIC: 0, DataClass.INTERNAL: 1, DataClass.USER: 2}
         cap = order[max_data_class]
+        # a route cleared for a higher sensitivity can also handle lower — permitted >= required
         return [
             r for r in self._routes.values()
-            if r.healthy and order[r.permitted_data_classification] <= cap
+            if r.healthy and order[r.permitted_data_classification] >= cap
         ]
 
     def resolve(self, allowed_routes: list[str], max_data_class: DataClass) -> ModelRoute | None:
-        """First allowed route that is registered, healthy, and permitted. None -> degraded."""
+        """First allowed route that is registered, healthy, and cleared for the data. None -> degraded."""
         for name in allowed_routes:
             route = self._routes.get(name)
             if route and route.healthy:
                 order = {DataClass.PUBLIC: 0, DataClass.INTERNAL: 1, DataClass.USER: 2}
-                if order[route.permitted_data_classification] <= order[max_data_class]:
+                if order[route.permitted_data_classification] >= order[max_data_class]:
                     return route
         return None
 
